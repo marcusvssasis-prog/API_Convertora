@@ -11,8 +11,8 @@ npm run start:dev # Rodar o nest em si.
     nodejs (com nest-cli instalado) ou nix usando nix flake develop no diretório atual. \
 
 --> Arquitetura e Estrutura (Clean Architecture & SOLID): \
-[ ] ---> Estruturar o projeto de forma modular no NestJS \
-[ ] ---> Aplicar conceitos de Programação Orientada a Objetos (POO) \
+[X] ---> Estruturar o projeto de forma modular no NestJS \
+[X] ---> Aplicar conceitos de Programação Orientada a Objetos (POO) \
 [ ] ---> Camada de Negócio: Criar classes, interfaces de repositório e isolar regras de negócio \
 [ ] ---> Camada de Dados: Implementar repositórios, configurar ORM/Banco \
 [X] ---> Integrar API externa de câmbio \
