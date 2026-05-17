@@ -9,8 +9,4 @@ export class AppController {
   getHello(): string {
     return this.appService.getHello();
   }
-  @Get('moedas')
-  async getMoedas() {
-    return await this.appService.getMoedas();
-  }
 }
