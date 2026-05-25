@@ -6,6 +6,8 @@ import { ConversionEntity } from '../entities/conversion.entity';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
+import { CurrenciesParserResponseDto } from '../dtos/currencies-parser-response.dto';
+import { ConversionParserResponseDto } from '../dtos/conversion-parser-response.dto';
 
 
 
@@ -57,6 +59,49 @@ export class CurrencyService {
     newConversion.createdAt = new Date();
 
     return this.conversionRepository.save(newConversion);
+  }
+
+  private formatCurrency(value: number): string {
+    return `R$ ${value.toFixed(2).replace('.', ',')}`;
+  }
+
+  private formatDate(date: Date): string {
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} \u00e0s ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+  }
+
+  async getAllCurrenciesParsed(): Promise<CurrenciesParserResponseDto> {
+    const currencies = await this.getAllCurrencies();
+    const now = new Date();
+
+    return {
+      data: this.formatDate(now),
+      total: currencies.length,
+      moedas: currencies.map((c) => ({
+        nome: c.name,
+        codigo: c.code,
+        compra: this.formatCurrency(parseFloat(c.bid)),
+        venda: this.formatCurrency(parseFloat(c.ask)),
+      })),
+    };
+  }
+
+  async calculateConversionParsed(dto: CreateConversionDto): Promise<ConversionParserResponseDto> {
+    const result = await this.calculateConversion(dto);
+
+    return {
+      consulta: {
+        valor: result.amount.toFixed(2),
+        de: result.fromCurrency,
+        para: result.toCurrency,
+      },
+      resultado: {
+        valorConvertido: this.formatCurrency(result.result),
+        taxa: result.rateUsed.toFixed(4),
+        data: this.formatDate(result.createdAt),
+        descricao: `${result.amount.toFixed(2)} ${result.fromCurrency} = ${this.formatCurrency(result.result)} ${result.toCurrency} (taxa: ${result.rateUsed.toFixed(4)})`,
+      },
+    };
   }
 
   async getAllCurrencies(): Promise<CurrencyDto[]> {
