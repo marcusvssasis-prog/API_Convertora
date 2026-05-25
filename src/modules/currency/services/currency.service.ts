@@ -62,12 +62,12 @@ export class CurrencyService {
   }
 
   private formatCurrency(value: number): string {
-    return `R$ ${value.toFixed(2).replace('.', ',')}`;
+    return value.toFixed(2);
   }
 
   private formatDate(date: Date): string {
     const pad = (n: number) => n.toString().padStart(2, '0');
-    return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} \u00e0s ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
   }
 
   async getAllCurrenciesParsed(): Promise<CurrenciesParserResponseDto> {
@@ -80,8 +80,8 @@ export class CurrencyService {
       moedas: currencies.map((c) => ({
         nome: c.name,
         codigo: c.code,
-        compra: this.formatCurrency(parseFloat(c.bid)),
-        venda: this.formatCurrency(parseFloat(c.ask)),
+        compra: `${this.formatCurrency(parseFloat(c.bid))} ${c.code}`,
+        venda: `${this.formatCurrency(parseFloat(c.ask))} ${c.code}`,
       })),
     };
   }
@@ -96,7 +96,7 @@ export class CurrencyService {
         para: result.toCurrency,
       },
       resultado: {
-        valorConvertido: this.formatCurrency(result.result),
+        valorConvertido: `${this.formatCurrency(result.result)} ${result.toCurrency}`,
         taxa: result.rateUsed.toFixed(4),
         data: this.formatDate(result.createdAt),
         descricao: `${result.amount.toFixed(2)} ${result.fromCurrency} = ${this.formatCurrency(result.result)} ${result.toCurrency} (taxa: ${result.rateUsed.toFixed(4)})`,

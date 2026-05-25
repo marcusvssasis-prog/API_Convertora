@@ -3,14 +3,15 @@ import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { ValidationPipe } from '@nestjs/common';
 
-
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
+
   app.useGlobalFilters(new GlobalExceptionFilter());
-  
+
   app.useGlobalPipes(new ValidationPipe());
-  
+
+  app.getHttpAdapter().getInstance().set('json spaces', 2);
+
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
