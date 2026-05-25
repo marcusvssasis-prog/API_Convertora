@@ -57,3 +57,13 @@ npm run start:dev # Rodar o nest em si.
 Rotas atuais:
 
 [X] ---> ```/moedas```, função: Recebe retorno do câmbio atual de todas moedas aparti da API externa.
+[X] ---> ```/converter```, função: Recebe um corpo json:
+
+```
+curl -X POST http://localhost:3000/moedas/converter \
+         -H "Content-Type: application/json" \
+         -d '{"amount": 100, "fromCurrency": "USD", "toCurrency": "BRL"}'
+```
+
+Exemplo de BRL para Dolarrr
+

@@ -8,5 +8,9 @@ export class CreateConversionDto {
     @IsString()
     @Length(3, 3)
     fromCurrency!: string;
+
+    @IsString()
+    @Length(3, 3)
+    toCurrency!: string;
     
 }

@@ -18,35 +18,41 @@ export class CurrencyService {
   ) { }
 
   async calculateConversion(dto: CreateConversionDto): Promise<ConversionEntity> {
-    const { amount, fromCurrency } = dto;
-    const toCurrency = 'BRL';
+    const { amount, fromCurrency, toCurrency } = dto;
 
-    let rate: number;
+    let fromRate: number;
+    let toRate: number;
     try {
-      // Recupera a chave do .env de forma segura
       const apiKey = this.configService.get<string>('HG_API_KEY');
-      // Ajuste da URL abaixo de acordo com a documentação exata da API que está sendo usada
       const url = `https://api.hgbrasil.com/finance?key=${apiKey}`;
 
       const response = await firstValueFrom(this.httpService.get(url));
 
-      const currencyKey = fromCurrency.toUpperCase();
-      rate = response.data.results.currencies[currencyKey].buy;
+      const fromKey = fromCurrency.toUpperCase();
+      const toKey = toCurrency.toUpperCase();
+
+      fromRate = fromKey === 'BRL' ? 1 : response.data.results.currencies[fromKey]?.buy;
+      toRate = toKey === 'BRL' ? 1 : response.data.results.currencies[toKey]?.buy;
+
+      if (!fromRate || !toRate) {
+        throw new Error(`Moeda não encontrada`);
+      }
 
     } catch (error) {
       throw new BadRequestException(
-        `Erro ao buscar a taxa para '${fromCurrency}'. Verifique a chave da API ou a conexão.`
+        `Erro ao buscar a taxa para '${fromCurrency}' ou '${toCurrency}'. Verifique a chave da API ou a conexão.`
       );
     }
 
-    const convertedResult = amount * rate;
+    const rateUsed = fromRate / toRate;
+    const convertedResult = amount * rateUsed;
 
     const newConversion = new ConversionEntity();
     newConversion.id = Math.random().toString(36).substring(7);
     newConversion.amount = amount;
     newConversion.fromCurrency = fromCurrency.toUpperCase();
-    newConversion.toCurrency = toCurrency;
-    newConversion.rateUsed = rate;
+    newConversion.toCurrency = toCurrency.toUpperCase();
+    newConversion.rateUsed = rateUsed;
     newConversion.result = convertedResult;
     newConversion.createdAt = new Date();
 
