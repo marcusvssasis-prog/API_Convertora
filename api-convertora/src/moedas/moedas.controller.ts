@@ -5,7 +5,7 @@ import { UpdateMoedaDto } from './dto/update-moeda.dto';
 
 @Controller('moedas')
 export class MoedasController {
-  constructor(private readonly moedasService: MoedasService) {}
+  constructor(private readonly moedasService: MoedasService) { }
 
   @Post()
   create(@Body() createMoedaDto: CreateMoedaDto) {

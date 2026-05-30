@@ -10,19 +10,19 @@ exports.MoedasService = void 0;
 const common_1 = require("@nestjs/common");
 let MoedasService = class MoedasService {
     create(createMoedaDto) {
-        return 'This action adds a new moeda';
+        return "This action adds a new moeda";
     }
     findAll() {
-        return `This action returns all moedas`;
+        return "Todas moedas: \n EUR \n USD \n BRL \n JPY ";
     }
     findOne(id) {
-        return `This action returns a #${id} moeda`;
+        return "This action returns a #${id} moeda";
     }
     update(id, updateMoedaDto) {
-        return `This action updates a #${id} moeda`;
+        return "This action updates a #${ id } moeda";
     }
     remove(id) {
-        return `This action removes a #${id} moeda`;
+        return "This action removes a #${id} moeda";
     }
 };
 exports.MoedasService = MoedasService;
