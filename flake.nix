@@ -16,6 +16,7 @@
           typescript-language-server
           nodejs
           nest-cli
+          mariadb
         ];
       };
     };
