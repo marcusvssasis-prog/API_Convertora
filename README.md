@@ -14,7 +14,13 @@ e então: \
 
 Tasks:
 Criar conversão de moeda []; \
---> Req: idk; \
+--> Req: Capacidade do Nest criar tabela na DB [] (Preforma) com esses (Provaveis) valores:
+
+        ```NomeMoedas, ValorMoeda, DataModificação;
+        (Onde) Nome é FIXO, ValorMoeda variavel -- ligada a DataModificação variavel;
+        Relação -> Nome(1) <-> (N)ValorMoeda(1) <-> (1)DataModificação``` Uma moeda pode haver somente um nome. \n Porém, pode ter varos valores (Lastreados) pela DataModificação.
+
+\
 Consultar conversões realizadas []; \
 --> Req: fetch no DB.;\
 Atualizar uma conversão existente []; \
