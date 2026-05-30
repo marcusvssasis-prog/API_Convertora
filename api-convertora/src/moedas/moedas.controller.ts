@@ -11,6 +11,12 @@ export class MoedasController {
   create(@Body() createMoedaDto: CreateMoedaDto) {
     return this.moedasService.create(createMoedaDto);
   }
+  @Post(':id/cotacao')
+  addCotacao(@Param('id') id: string, @Body('valor') valor: number) {
+    return this.moedasService.addCotacao(+id, valor);
+  }
+
+  @Post()
 
   @Get()
   findAll() {

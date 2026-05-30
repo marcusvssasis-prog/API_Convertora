@@ -15,12 +15,6 @@ e então: \
 Tasks:
 Criar conversão de moeda []; \
 --> Req: Capacidade do Nest criar tabela na DB [] (Preforma) com esses (Provaveis) valores:
-
-        ```NomeMoedas, ValorMoeda, DataModificação;
-        (Onde) Nome é FIXO, ValorMoeda variavel -- ligada a DataModificação variavel;
-        Relação -> Nome(1) <-> (N)ValorMoeda(1) <-> (1)DataModificação``` Uma moeda pode haver somente um nome. \n Porém, pode ter varos valores (Lastreados) pela DataModificação. O valor da moeda deverá ser posto contra o dolar para rastreio. Sendo dolar: 1;
-
-\
 Consultar conversões realizadas []; \
 --> Req: fetch no DB.;\
 Atualizar uma conversão existente []; \
@@ -36,5 +30,47 @@ Subtasks (dependências):
 --> Conectar o Nest ao MariaDB [X];
 --> ShellHook do devshell para executar podman & MariaDB (Rootless) [X];
 
+Curls Atuais / Exemplos:
 
+# criar moeda
+curl -X POST localhost:3000/moedas \
+  -H "Content-Type: application/json" \
+  -d '{"nome": "BRL"}'
+
+# criar mais algumas
+curl -X POST localhost:3000/moedas \
+  -H "Content-Type: application/json" \
+  -d '{"nome": "EUR"}'
+
+curl -X POST localhost:3000/moedas \
+  -H "Content-Type: application/json" \
+  -d '{"nome": "JPY"}'
+
+# adicionar cotação a uma moeda
+curl -X POST localhost:3000/moedas/1/cotacao \
+  -H "Content-Type: application/json" \
+  -d '{"valor": 5.72}'
+
+# adicionar mais cotações (histórico)
+curl -X POST localhost:3000/moedas/1/cotacao \
+  -H "Content-Type: application/json" \
+  -d '{"valor": 5.68}'
+
+curl -X POST localhost:3000/moedas/2/cotacao \
+  -H "Content-Type: application/json" \
+  -d '{"valor": 0.92}'
+
+# listar todas as moedas com cotações
+curl localhost:3000/moedas
+
+# buscar moeda específica
+curl localhost:3000/moedas/1
+
+# atualizar nome
+curl -X PATCH localhost:3000/moedas/1 \
+  -H "Content-Type: application/json" \
+  -d '{"nome": "USD"}'
+
+# deletar moeda (e cotações em cascata)
+curl -X DELETE localhost:3000/moedas/3
 

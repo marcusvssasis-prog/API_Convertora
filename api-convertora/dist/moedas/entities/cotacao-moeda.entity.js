@@ -9,28 +9,33 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Moeda = void 0;
+exports.CotacaoMoeda = void 0;
 const typeorm_1 = require("typeorm");
-const cotacao_moeda_entity_1 = require("./cotacao-moeda.entity");
-let Moeda = class Moeda {
+const moeda_entity_1 = require("./moeda.entity");
+let CotacaoMoeda = class CotacaoMoeda {
     id;
-    nome;
-    cotacoes;
+    valor;
+    dataModificacao;
+    moeda;
 };
-exports.Moeda = Moeda;
+exports.CotacaoMoeda = CotacaoMoeda;
 __decorate([
     (0, typeorm_1.PrimaryGeneratedColumn)(),
     __metadata("design:type", Number)
-], Moeda.prototype, "id", void 0);
+], CotacaoMoeda.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ unique: true }),
-    __metadata("design:type", String)
-], Moeda.prototype, "nome", void 0);
+    (0, typeorm_1.Column)('decimal', { precision: 10, scale: 6 }),
+    __metadata("design:type", Number)
+], CotacaoMoeda.prototype, "valor", void 0);
 __decorate([
-    (0, typeorm_1.OneToMany)(() => cotacao_moeda_entity_1.CotacaoMoeda, (c) => c.moeda),
-    __metadata("design:type", Array)
-], Moeda.prototype, "cotacoes", void 0);
-exports.Moeda = Moeda = __decorate([
+    (0, typeorm_1.CreateDateColumn)(),
+    __metadata("design:type", Date)
+], CotacaoMoeda.prototype, "dataModificacao", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => moeda_entity_1.Moeda, (m) => m.cotacoes),
+    __metadata("design:type", moeda_entity_1.Moeda)
+], CotacaoMoeda.prototype, "moeda", void 0);
+exports.CotacaoMoeda = CotacaoMoeda = __decorate([
     (0, typeorm_1.Entity)()
-], Moeda);
-//# sourceMappingURL=moeda.entity.js.map
+], CotacaoMoeda);
+//# sourceMappingURL=cotacao-moeda.entity.js.map

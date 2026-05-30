@@ -25,6 +25,9 @@ let MoedasController = class MoedasController {
     create(createMoedaDto) {
         return this.moedasService.create(createMoedaDto);
     }
+    addCotacao(id, valor) {
+        return this.moedasService.addCotacao(+id, valor);
+    }
     findAll() {
         return this.moedasService.findAll();
     }
@@ -47,6 +50,15 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], MoedasController.prototype, "create", null);
 __decorate([
+    (0, common_1.Post)(':id/cotacao'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)('valor')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Number]),
+    __metadata("design:returntype", void 0)
+], MoedasController.prototype, "addCotacao", null);
+__decorate([
+    (0, common_1.Post)(),
     (0, common_1.Get)(),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),

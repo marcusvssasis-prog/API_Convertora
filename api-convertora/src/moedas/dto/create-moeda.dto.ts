@@ -1,1 +1,4 @@
-export class CreateMoedaDto {}
+export class CreateMoedaDto {
+  nome: string;
+  valor: number;
+}
