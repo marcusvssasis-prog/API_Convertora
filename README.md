@@ -40,14 +40,14 @@ _Pass de JQ para leitura, tool disponivel no flake._ \
 ```
 curl -X POST localhost:3000/moedas \
   -H "Content-Type: application/json" \
-  -d '{"nome": "${moeda}"}'
+  -d '{"nome": "NOME"}'
 ```
 
 # Empurra valor de cotação a moeda criada
 ```
-curl -X POST localhost:3000/moedas/${id}/cotacao \
+curl -X POST localhost:3000/moedas/${id}/cotacao \ # <- Verificar ID em listação de cotações \
   -H "Content-Type: application/json" \
-  -d '{"valor": ${valor}'
+  -d '{"valor": 1'
 ```
 
 # listar todas as moedas com cotações
@@ -74,7 +74,7 @@ curl -X DELETE localhost:3000/moedas/3
 ```
 curl -X POST localhost:3000/moedas/converter \
   -H "Content-Type: application/json" \
-  -d '{"from": "{moeda}", "to": "{moeda}", "amount": ${quantidade}}'
+  -d '{"from": "moeda", "to": "moeda", "amount": 1}'
 ```
 
 
