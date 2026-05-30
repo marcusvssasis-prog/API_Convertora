@@ -74,7 +74,7 @@ curl -X DELETE localhost:3000/moedas/3
 ```
 curl -X POST localhost:3000/moedas/converter \
   -H "Content-Type: application/json" \
-  -d '{"from": "moeda", "to": "moeda", "amount": 1}'
+  -d '{"from": "moeda", "to": "moeda", "amount": 1}' | jq
 ```
 
 

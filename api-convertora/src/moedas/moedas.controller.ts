@@ -7,19 +7,19 @@ import { UpdateMoedaDto } from './dto/update-moeda.dto';
 export class MoedasController {
   constructor(private readonly moedasService: MoedasService) { }
 
+  @Post('converter')
+  converter(@Body() body: { from: string; to: string; amount: number }) {
+    return this.moedasService.converter(body.from, body.to, body.amount);
+  }
+
   @Post()
   create(@Body() createMoedaDto: CreateMoedaDto) {
     return this.moedasService.create(createMoedaDto);
   }
+
   @Post(':id/cotacao')
   addCotacao(@Param('id') id: string, @Body('valor') valor: number) {
     return this.moedasService.addCotacao(+id, valor);
-  }
-
-  @Post()
-  @Post('converter')
-  converter(@Body() body: { from: string; to: string; amount: number }) {
-    return this.moedasService.converter(body.from, body.to, body.amount);
   }
 
   @Get()

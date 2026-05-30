@@ -4,8 +4,6 @@ import { UpdateMoedaDto } from './dto/update-moeda.dto';
 export declare class MoedasController {
     private readonly moedasService;
     constructor(moedasService: MoedasService);
-    create(createMoedaDto: CreateMoedaDto): Promise<import("./entities/moeda.entity").Moeda>;
-    addCotacao(id: string, valor: number): Promise<import("./entities/cotacao-moeda.entity").CotacaoMoeda>;
     converter(body: {
         from: string;
         to: string;
@@ -18,6 +16,8 @@ export declare class MoedasController {
         taxaFrom: number;
         taxaTo: number;
     }>;
+    create(createMoedaDto: CreateMoedaDto): Promise<import("./entities/moeda.entity").Moeda>;
+    addCotacao(id: string, valor: number): Promise<import("./entities/cotacao-moeda.entity").CotacaoMoeda>;
     findAll(): Promise<import("./entities/moeda.entity").Moeda[]>;
     findOne(id: string): Promise<import("./entities/moeda.entity").Moeda>;
     update(id: string, updateMoedaDto: UpdateMoedaDto): Promise<import("./entities/moeda.entity").Moeda>;

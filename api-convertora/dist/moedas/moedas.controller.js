@@ -22,14 +22,14 @@ let MoedasController = class MoedasController {
     constructor(moedasService) {
         this.moedasService = moedasService;
     }
+    converter(body) {
+        return this.moedasService.converter(body.from, body.to, body.amount);
+    }
     create(createMoedaDto) {
         return this.moedasService.create(createMoedaDto);
     }
     addCotacao(id, valor) {
         return this.moedasService.addCotacao(+id, valor);
-    }
-    converter(body) {
-        return this.moedasService.converter(body.from, body.to, body.amount);
     }
     findAll() {
         return this.moedasService.findAll();
@@ -46,6 +46,13 @@ let MoedasController = class MoedasController {
 };
 exports.MoedasController = MoedasController;
 __decorate([
+    (0, common_1.Post)('converter'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], MoedasController.prototype, "converter", null);
+__decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -60,14 +67,6 @@ __decorate([
     __metadata("design:paramtypes", [String, Number]),
     __metadata("design:returntype", void 0)
 ], MoedasController.prototype, "addCotacao", null);
-__decorate([
-    (0, common_1.Post)(),
-    (0, common_1.Post)('converter'),
-    __param(0, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", void 0)
-], MoedasController.prototype, "converter", null);
 __decorate([
     (0, common_1.Get)(),
     __metadata("design:type", Function),
