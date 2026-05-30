@@ -11,12 +11,26 @@ const common_1 = require("@nestjs/common");
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
 const moedas_module_1 = require("./moedas/moedas.module");
+const typeorm_1 = require("@nestjs/typeorm");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
-        imports: [moedas_module_1.MoedasModule],
+        imports: [
+            typeorm_1.TypeOrmModule.forRoot({
+                type: "mariadb",
+                host: "127.0.0.1",
+                port: 3306,
+                username: "root",
+                password: "",
+                database: "main",
+                entities: [],
+                synchronize: true,
+                autoLoadEntities: true,
+            }),
+            moedas_module_1.MoedasModule
+        ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],
     })
