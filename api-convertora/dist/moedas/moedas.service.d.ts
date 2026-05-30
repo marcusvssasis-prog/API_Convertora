@@ -13,4 +13,12 @@ export declare class MoedasService {
     findOne(id: number): Promise<Moeda>;
     update(id: number, dto: UpdateMoedaDto): Promise<Moeda>;
     remove(id: number): Promise<void>;
+    converter(from: string, to: string, amount: number): Promise<{
+        from: string;
+        to: string;
+        amount: number;
+        resultado: number;
+        taxaFrom: number;
+        taxaTo: number;
+    }>;
 }

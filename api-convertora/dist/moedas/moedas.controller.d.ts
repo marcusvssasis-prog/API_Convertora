@@ -6,6 +6,18 @@ export declare class MoedasController {
     constructor(moedasService: MoedasService);
     create(createMoedaDto: CreateMoedaDto): Promise<import("./entities/moeda.entity").Moeda>;
     addCotacao(id: string, valor: number): Promise<import("./entities/cotacao-moeda.entity").CotacaoMoeda>;
+    converter(body: {
+        from: string;
+        to: string;
+        amount: number;
+    }): Promise<{
+        from: string;
+        to: string;
+        amount: number;
+        resultado: number;
+        taxaFrom: number;
+        taxaTo: number;
+    }>;
     findAll(): Promise<import("./entities/moeda.entity").Moeda[]>;
     findOne(id: string): Promise<import("./entities/moeda.entity").Moeda>;
     update(id: string, updateMoedaDto: UpdateMoedaDto): Promise<import("./entities/moeda.entity").Moeda>;

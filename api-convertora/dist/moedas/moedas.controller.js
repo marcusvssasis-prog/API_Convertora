@@ -28,6 +28,9 @@ let MoedasController = class MoedasController {
     addCotacao(id, valor) {
         return this.moedasService.addCotacao(+id, valor);
     }
+    converter(body) {
+        return this.moedasService.converter(body.from, body.to, body.amount);
+    }
     findAll() {
         return this.moedasService.findAll();
     }
@@ -59,6 +62,13 @@ __decorate([
 ], MoedasController.prototype, "addCotacao", null);
 __decorate([
     (0, common_1.Post)(),
+    (0, common_1.Post)('converter'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], MoedasController.prototype, "converter", null);
+__decorate([
     (0, common_1.Get)(),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),

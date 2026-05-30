@@ -57,6 +57,26 @@ let MoedasService = class MoedasService {
     async remove(id) {
         await this.moedaRepo.delete(id);
     }
+    async converter(from, to, amount) {
+        const moedaFrom = await this.moedaRepo.findOne({
+            where: { nome: from },
+            relations: { cotacoes: true }
+        });
+        const moedaTo = await this.moedaRepo.findOne({
+            where: { nome: to },
+            relations: { cotacoes: true }
+        });
+        if (!moedaFrom || !moedaTo)
+            throw new common_1.NotFoundException('Moeda não encontrada');
+        if (!moedaFrom.cotacoes.length || !moedaTo.cotacoes.length)
+            throw new common_1.BadRequestException('Moeda sem cotação registrada');
+        const taxaFrom = moedaFrom.cotacoes
+            .sort((a, b) => b.dataModificacao.getTime() - a.dataModificacao.getTime())[0].valor;
+        const taxaTo = moedaTo.cotacoes
+            .sort((a, b) => b.dataModificacao.getTime() - a.dataModificacao.getTime())[0].valor;
+        const resultado = amount * (taxaTo / taxaFrom);
+        return { from, to, amount, resultado, taxaFrom, taxaTo };
+    }
 };
 exports.MoedasService = MoedasService;
 exports.MoedasService = MoedasService = __decorate([

@@ -1,4 +1,4 @@
-import { NotFoundException, Injectable } from '@nestjs/common';
+import { NotFoundException, Injectable, BadRequestException } from '@nestjs/common';
 import { CreateMoedaDto } from './dto/create-moeda.dto';
 import { UpdateMoedaDto } from './dto/update-moeda.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -58,5 +58,31 @@ export class MoedasService {
   // DELETE /moedas/:id — remove moeda e cotações
   async remove(id: number): Promise<void> {
     await this.moedaRepo.delete(id);
+  }
+  async converter(from: string, to: string, amount: number) {
+    // pega a ultima cotacao
+    const moedaFrom = await this.moedaRepo.findOne({
+      where: { nome: from },
+      relations: { cotacoes: true }
+    });
+    const moedaTo = await this.moedaRepo.findOne({
+      where: { nome: to },
+      relations: { cotacoes: true }
+    });
+
+    if (!moedaFrom || !moedaTo) throw new NotFoundException('Moeda não encontrada');
+    if (!moedaFrom.cotacoes.length || !moedaTo.cotacoes.length)
+      throw new BadRequestException('Moeda sem cotação registrada');
+
+    // cotacao por dataModificacao
+    const taxaFrom = moedaFrom.cotacoes
+      .sort((a, b) => b.dataModificacao.getTime() - a.dataModificacao.getTime())[0].valor;
+
+    const taxaTo = moedaTo.cotacoes
+      .sort((a, b) => b.dataModificacao.getTime() - a.dataModificacao.getTime())[0].valor;
+
+    const resultado = amount * (taxaTo / taxaFrom);
+
+    return { from, to, amount, resultado, taxaFrom, taxaTo };
   }
 }

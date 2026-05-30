@@ -17,6 +17,10 @@ export class MoedasController {
   }
 
   @Post()
+  @Post('converter')
+  converter(@Body() body: { from: string; to: string; amount: number }) {
+    return this.moedasService.converter(body.from, body.to, body.amount);
+  }
 
   @Get()
   findAll() {
