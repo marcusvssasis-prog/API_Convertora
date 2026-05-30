@@ -17,6 +17,7 @@
           nodejs
           nest-cli
           mariadb
+          podman
         ];
       };
     };
