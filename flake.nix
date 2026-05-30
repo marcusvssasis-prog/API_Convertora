@@ -12,6 +12,7 @@
         nodejs
         nest-cli
         mariadb
+        jq
       ];
 
     in
