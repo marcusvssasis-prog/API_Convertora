@@ -32,45 +32,30 @@ Subtasks (dependências):
 
 Curls Atuais / Exemplos:
 
+${moeda} -> codigo 3 digitos moeda, aka, BRL, EUR...
+${
+
 # criar moeda
 curl -X POST localhost:3000/moedas \
   -H "Content-Type: application/json" \
-  -d '{"nome": "BRL"}'
+  -d '{"nome": "${moeda}"}'
 
-# criar mais algumas
-curl -X POST localhost:3000/moedas \
+# Empurra valor de cotação a moeda criada
+curl -X POST localhost:3000/moedas/${id}/cotacao \
   -H "Content-Type: application/json" \
-  -d '{"nome": "EUR"}'
-
-curl -X POST localhost:3000/moedas \
-  -H "Content-Type: application/json" \
-  -d '{"nome": "JPY"}'
-
-# adicionar cotação a uma moeda
-curl -X POST localhost:3000/moedas/1/cotacao \
-  -H "Content-Type: application/json" \
-  -d '{"valor": 5.72}'
-
-# adicionar mais cotações (histórico)
-curl -X POST localhost:3000/moedas/1/cotacao \
-  -H "Content-Type: application/json" \
-  -d '{"valor": 5.68}'
-
-curl -X POST localhost:3000/moedas/2/cotacao \
-  -H "Content-Type: application/json" \
-  -d '{"valor": 0.92}'
+  -d '{"valor": ${valor}'
 
 # listar todas as moedas com cotações
-curl localhost:3000/moedas
+curl localhost:3000/moedas | jq
 
 # buscar moeda específica
-curl localhost:3000/moedas/1
+curl localhost:3000/moedas/1 | jq
 
 # atualizar nome
 curl -X PATCH localhost:3000/moedas/1 \
   -H "Content-Type: application/json" \
   -d '{"nome": "USD"}'
 
-# deletar moeda (e cotações em cascata)
+# deletar moeda (E suas cotaçẽos)
 curl -X DELETE localhost:3000/moedas/3
 
