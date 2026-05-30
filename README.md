@@ -18,7 +18,7 @@ Criar conversão de moeda []; \
 
         ```NomeMoedas, ValorMoeda, DataModificação;
         (Onde) Nome é FIXO, ValorMoeda variavel -- ligada a DataModificação variavel;
-        Relação -> Nome(1) <-> (N)ValorMoeda(1) <-> (1)DataModificação``` Uma moeda pode haver somente um nome. \n Porém, pode ter varos valores (Lastreados) pela DataModificação.
+        Relação -> Nome(1) <-> (N)ValorMoeda(1) <-> (1)DataModificação``` Uma moeda pode haver somente um nome. \n Porém, pode ter varos valores (Lastreados) pela DataModificação. O valor da moeda deverá ser posto contra o dolar para rastreio. Sendo dolar: 1;
 
 \
 Consultar conversões realizadas []; \
