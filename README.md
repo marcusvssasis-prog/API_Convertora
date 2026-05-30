@@ -13,9 +13,9 @@ e então: \
 
 
 Tasks:
-Criar conversão de moeda []; \
---> Req: Capacidade do Nest criar tabela na DB [] (Preforma) com esses (Provaveis) valores:
-Consultar conversões realizadas []; \
+Criar conversão de moeda [X]; \
+--> Req: Capacidade do Nest criar tabela na DB [X] (Preforma) com esses (Provaveis) valores:
+Consultar conversões realizadas [X]; \
 --> Req: fetch no DB.;\
 Atualizar uma conversão existente []; \
 --> Req: Updt on DB.;\
@@ -32,30 +32,49 @@ Subtasks (dependências):
 
 Curls Atuais / Exemplos:
 
-${moeda} -> codigo 3 digitos moeda, aka, BRL, EUR...
-${
+{moeda} -> codigo 3 digitos moeda, aka, BRL, EUR... (STRING) \
+{valor} -> valor (INT) \
+_Pass de JQ para leitura, tool disponivel no flake._ \
 
 # criar moeda
+```
 curl -X POST localhost:3000/moedas \
   -H "Content-Type: application/json" \
   -d '{"nome": "${moeda}"}'
+```
 
 # Empurra valor de cotação a moeda criada
+```
 curl -X POST localhost:3000/moedas/${id}/cotacao \
   -H "Content-Type: application/json" \
   -d '{"valor": ${valor}'
+```
 
 # listar todas as moedas com cotações
+```
 curl localhost:3000/moedas | jq
+```
 
 # buscar moeda específica
+```
 curl localhost:3000/moedas/1 | jq
+```
 
 # atualizar nome
+```
 curl -X PATCH localhost:3000/moedas/1 \
   -H "Content-Type: application/json" \
-  -d '{"nome": "USD"}'
+  -d '{"nome": "USD"}
+```
 
 # deletar moeda (E suas cotaçẽos)
 curl -X DELETE localhost:3000/moedas/3
+
+# converter
+```
+curl -X POST localhost:3000/moedas/converter \
+  -H "Content-Type: application/json" \
+  -d '{"from": "{moeda}", "to": "{moeda}", "amount": ${quantidade}}'
+```
+
 
