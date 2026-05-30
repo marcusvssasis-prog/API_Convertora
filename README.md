@@ -1,8 +1,9 @@
 # Como rodar:
 
-```cd api-convertora & nix develop ../```
+```cd api-convertora & nix develop .#Podman```
 
 - Verifique se houve erros na execução do DB.
+- Opcionalmente, para entrar com as ferramentas, sem executar novamente o container: ```nix develop```
 
 e então: \
 
