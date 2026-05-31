@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateMoedaDto } from './dto/create-moeda.dto';
 import { UpdateMoedaDto } from './dto/update-moeda.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -28,6 +28,9 @@ export class MoedasService {
   // POST /moedas/:id/cotacao — adiciona valor à moeda
   async addCotacao(id: number, valor: number): Promise<CotacaoMoeda> {
     const moeda = await this.moedaRepo.findOneBy({ id });
+    if (!moeda) {
+      throw new NotFoundException('Moeda não encontrada');
+    }
     const cotacao = this.cotacaoRepo.create({ valor, moeda });
     return await this.cotacaoRepo.save(cotacao);
   }
@@ -39,10 +42,14 @@ export class MoedasService {
 
   // GET /moedas/:id — moeda específica com cotações
   async findOne(id: number): Promise<Moeda> {
-    return await this.moedaRepo.findOne({
+    const moeda = await this.moedaRepo.findOne({
       where: { id },
       relations: { cotacoes: true },
     });
+    if (!moeda) {
+      throw new NotFoundException('Moeda não encontrada');
+    }
+    return moeda;
   }
 
   async update(id: number, dto: UpdateMoedaDto): Promise<Moeda> {
@@ -64,6 +71,19 @@ export class MoedasService {
       where: { nome: to },
       relations: { cotacoes: true },
     });
+
+    if (!moedaFrom) {
+      throw new NotFoundException(`Moeda '${from}' não encontrada`);
+    }
+    if (!moedaTo) {
+      throw new NotFoundException(`Moeda '${to}' não encontrada`);
+    }
+    if (!moedaFrom.cotacoes?.length) {
+      throw new NotFoundException(`Sem cotações para '${from}'`);
+    }
+    if (!moedaTo.cotacoes?.length) {
+      throw new NotFoundException(`Sem cotações para '${to}'`);
+    }
 
     const taxaFrom = moedaFrom.cotacoes
       .sort((a, b) => b.dataModificacao.getTime() - a.dataModificacao.getTime())[0].valor;
@@ -94,6 +114,9 @@ export class MoedasService {
 
   async updateConversao(id: number, payload: Partial<ConversaoHistorico>): Promise<ConversaoHistorico> {
     const conversao = await this.historicoRepo.findOneBy({ id });
+    if (!conversao) {
+      throw new NotFoundException('Conversão não encontrada');
+    }
     const atualizado = Object.assign(conversao, payload);
     return await this.historicoRepo.save(atualizado);
   }
