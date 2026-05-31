@@ -1,6 +1,7 @@
 import { MoedasService } from './moedas.service';
 import { CreateMoedaDto } from './dto/create-moeda.dto';
 import { UpdateMoedaDto } from './dto/update-moeda.dto';
+import { UpdateConversaoPartialDto } from './dto/update-conversao.dto';
 export declare class MoedasController {
     private readonly moedasService;
     constructor(moedasService: MoedasService);
@@ -16,6 +17,8 @@ export declare class MoedasController {
         taxaFrom: number;
         taxaTo: number;
     }>;
+    findAllConversoes(): Promise<import("./entities/conversao-historico.entity").ConversaoHistorico[]>;
+    updateConversao(id: string, updateConversaoDto: UpdateConversaoPartialDto): Promise<import("./entities/conversao-historico.entity").ConversaoHistorico>;
     create(createMoedaDto: CreateMoedaDto): Promise<import("./entities/moeda.entity").Moeda>;
     addCotacao(id: string, valor: number): Promise<import("./entities/cotacao-moeda.entity").CotacaoMoeda>;
     findAll(): Promise<import("./entities/moeda.entity").Moeda[]>;

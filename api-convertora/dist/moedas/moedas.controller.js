@@ -17,6 +17,7 @@ const common_1 = require("@nestjs/common");
 const moedas_service_1 = require("./moedas.service");
 const create_moeda_dto_1 = require("./dto/create-moeda.dto");
 const update_moeda_dto_1 = require("./dto/update-moeda.dto");
+const update_conversao_dto_1 = require("./dto/update-conversao.dto");
 let MoedasController = class MoedasController {
     moedasService;
     constructor(moedasService) {
@@ -24,6 +25,12 @@ let MoedasController = class MoedasController {
     }
     converter(body) {
         return this.moedasService.converter(body.from, body.to, body.amount);
+    }
+    findAllConversoes() {
+        return this.moedasService.findAllConversoes();
+    }
+    updateConversao(id, updateConversaoDto) {
+        return this.moedasService.updateConversao(+id, updateConversaoDto);
     }
     create(createMoedaDto) {
         return this.moedasService.create(createMoedaDto);
@@ -52,6 +59,20 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], MoedasController.prototype, "converter", null);
+__decorate([
+    (0, common_1.Get)('conversoes'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], MoedasController.prototype, "findAllConversoes", null);
+__decorate([
+    (0, common_1.Patch)('conversoes/:id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, update_conversao_dto_1.UpdateConversaoPartialDto]),
+    __metadata("design:returntype", void 0)
+], MoedasController.prototype, "updateConversao", null);
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),

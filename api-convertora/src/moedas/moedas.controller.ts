@@ -2,14 +2,28 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { MoedasService } from './moedas.service';
 import { CreateMoedaDto } from './dto/create-moeda.dto';
 import { UpdateMoedaDto } from './dto/update-moeda.dto';
+import { UpdateConversaoPartialDto } from './dto/update-conversao.dto';
 
 @Controller('moedas')
 export class MoedasController {
-  constructor(private readonly moedasService: MoedasService) { }
+  constructor(private readonly moedasService: MoedasService) {}
 
   @Post('converter')
   converter(@Body() body: { from: string; to: string; amount: number }) {
     return this.moedasService.converter(body.from, body.to, body.amount);
+  }
+
+  @Get('conversoes')
+  findAllConversoes() {
+    return this.moedasService.findAllConversoes();
+  }
+
+  @Patch('conversoes/:id')
+  updateConversao(
+    @Param('id') id: string,
+    @Body() updateConversaoDto: UpdateConversaoPartialDto,
+  ) {
+    return this.moedasService.updateConversao(+id, updateConversaoDto);
   }
 
   @Post()

@@ -18,12 +18,15 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const moeda_entity_1 = require("./entities/moeda.entity");
 const cotacao_moeda_entity_1 = require("./entities/cotacao-moeda.entity");
+const conversao_historico_entity_1 = require("./entities/conversao-historico.entity");
 let MoedasService = class MoedasService {
     moedaRepo;
     cotacaoRepo;
-    constructor(moedaRepo, cotacaoRepo) {
+    historicoRepo;
+    constructor(moedaRepo, cotacaoRepo, historicoRepo) {
         this.moedaRepo = moedaRepo;
         this.cotacaoRepo = cotacaoRepo;
+        this.historicoRepo = historicoRepo;
     }
     async create(dto) {
         const moeda = this.moedaRepo.create({ nome: dto.nome });
@@ -32,7 +35,7 @@ let MoedasService = class MoedasService {
     async addCotacao(id, valor) {
         const moeda = await this.moedaRepo.findOneBy({ id });
         if (!moeda) {
-            throw new common_1.NotFoundException("Moeda com ID ${id} não encontrada");
+            throw new common_1.NotFoundException(`Moeda com ID ${id} não encontrada`);
         }
         const cotacao = this.cotacaoRepo.create({ valor, moeda });
         return await this.cotacaoRepo.save(cotacao);
@@ -46,36 +49,72 @@ let MoedasService = class MoedasService {
             relations: { cotacoes: true },
         });
         if (!moeda) {
-            throw new common_1.NotFoundException("Moeda com ID ${ID)  não encontrada");
+            throw new common_1.NotFoundException(`Moeda com ID ${id} não encontrada`);
         }
         return moeda;
     }
     async update(id, dto) {
-        await this.moedaRepo.update(id, { nome: dto.nome });
+        const resultado = await this.moedaRepo.update(id, { nome: dto.nome });
+        if (resultado.affected === 0) {
+            throw new common_1.NotFoundException(`Moeda com ID ${id} não encontrada`);
+        }
         return await this.findOne(id);
     }
     async remove(id) {
-        await this.moedaRepo.delete(id);
+        const resultado = await this.moedaRepo.delete(id);
+        if (resultado.affected === 0) {
+            throw new common_1.NotFoundException(`Moeda com ID ${id} não encontrada`);
+        }
     }
     async converter(from, to, amount) {
+        if (!from || !to || amount == null) {
+            throw new common_1.BadRequestException('Parâmetros inválidos para conversão');
+        }
         const moedaFrom = await this.moedaRepo.findOne({
             where: { nome: from },
-            relations: { cotacoes: true }
+            relations: { cotacoes: true },
         });
         const moedaTo = await this.moedaRepo.findOne({
             where: { nome: to },
-            relations: { cotacoes: true }
+            relations: { cotacoes: true },
         });
-        if (!moedaFrom || !moedaTo)
-            throw new common_1.NotFoundException('Moeda não encontrada');
-        if (!moedaFrom.cotacoes.length || !moedaTo.cotacoes.length)
-            throw new common_1.BadRequestException('Moeda sem cotação registrada');
+        if (!moedaFrom) {
+            throw new common_1.NotFoundException(`Moeda de origem ${from} não encontrada`);
+        }
+        if (!moedaTo) {
+            throw new common_1.NotFoundException(`Moeda de destino ${to} não encontrada`);
+        }
+        if (!moedaFrom.cotacoes.length || !moedaTo.cotacoes.length) {
+            throw new common_1.BadRequestException('Ambas as moedas precisam ter cotações registradas');
+        }
         const taxaFrom = moedaFrom.cotacoes
             .sort((a, b) => b.dataModificacao.getTime() - a.dataModificacao.getTime())[0].valor;
         const taxaTo = moedaTo.cotacoes
             .sort((a, b) => b.dataModificacao.getTime() - a.dataModificacao.getTime())[0].valor;
-        const resultado = amount * (taxaTo / taxaFrom);
+        const resultado = Number((amount * (taxaTo / taxaFrom)).toFixed(6));
+        const historico = this.historicoRepo.create({
+            moedaFrom: from,
+            moedaTo: to,
+            amount,
+            resultado,
+            taxaFrom,
+            taxaTo,
+        });
+        await this.historicoRepo.save(historico);
         return { from, to, amount, resultado, taxaFrom, taxaTo };
+    }
+    async findAllConversoes() {
+        return await this.historicoRepo.find({
+            order: { dataCriacao: 'DESC' },
+        });
+    }
+    async updateConversao(id, payload) {
+        const conversao = await this.historicoRepo.findOneBy({ id });
+        if (!conversao) {
+            throw new common_1.NotFoundException(`Conversão com ID ${id} não encontrada`);
+        }
+        const atualizado = Object.assign(conversao, payload);
+        return await this.historicoRepo.save(atualizado);
     }
 };
 exports.MoedasService = MoedasService;
@@ -83,7 +122,9 @@ exports.MoedasService = MoedasService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(moeda_entity_1.Moeda)),
     __param(1, (0, typeorm_1.InjectRepository)(cotacao_moeda_entity_1.CotacaoMoeda)),
+    __param(2, (0, typeorm_1.InjectRepository)(conversao_historico_entity_1.ConversaoHistorico)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
         typeorm_2.Repository])
 ], MoedasService);
 //# sourceMappingURL=moedas.service.js.map

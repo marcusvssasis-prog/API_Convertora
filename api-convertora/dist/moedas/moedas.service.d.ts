@@ -1,12 +1,14 @@
 import { CreateMoedaDto } from './dto/create-moeda.dto';
 import { UpdateMoedaDto } from './dto/update-moeda.dto';
-import { Repository } from "typeorm";
+import { Repository } from 'typeorm';
 import { Moeda } from './entities/moeda.entity';
 import { CotacaoMoeda } from './entities/cotacao-moeda.entity';
+import { ConversaoHistorico } from './entities/conversao-historico.entity';
 export declare class MoedasService {
     private moedaRepo;
     private cotacaoRepo;
-    constructor(moedaRepo: Repository<Moeda>, cotacaoRepo: Repository<CotacaoMoeda>);
+    private historicoRepo;
+    constructor(moedaRepo: Repository<Moeda>, cotacaoRepo: Repository<CotacaoMoeda>, historicoRepo: Repository<ConversaoHistorico>);
     create(dto: CreateMoedaDto): Promise<Moeda>;
     addCotacao(id: number, valor: number): Promise<CotacaoMoeda>;
     findAll(): Promise<Moeda[]>;
@@ -21,4 +23,6 @@ export declare class MoedasService {
         taxaFrom: number;
         taxaTo: number;
     }>;
+    findAllConversoes(): Promise<ConversaoHistorico[]>;
+    updateConversao(id: number, payload: Partial<ConversaoHistorico>): Promise<ConversaoHistorico>;
 }

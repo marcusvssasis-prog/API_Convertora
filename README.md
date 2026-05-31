@@ -17,11 +17,11 @@ Criar conversão de moeda [X]; \
 --> Req: Capacidade do Nest criar tabela na DB [X] (Preforma) com esses (Provaveis) valores:
 Consultar conversões realizadas [X]; \
 --> Req: fetch no DB.;\
-Atualizar uma conversão existente []; \
+Atualizar uma conversão existente [X]; \
 --> Req: Updt on DB.;\
-Converter valores utilizando taxas de câmbio atualizadas ou simuladas []; \
+Converter valores utilizando taxas de câmbio atualizadas ou simuladas [X]; \
 --> Req: (Teorico?) Criar valores simulados onde 'moeda' recebe de uma var (vinda de db?) que declara valor pre-conversão; \
-Persistir históricod de conversões []; \
+Persistir históricod de conversões [X]; \
 --> Req: Fazer que cada POST também anote seu resultado na DB. \
 Tratamento de exceções []; \
 --> Req: idk, native? \
