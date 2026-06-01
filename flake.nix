@@ -16,6 +16,22 @@
         podman
       ];
 
+      commonHook = ''
+        printf "Matar processos anteriores (MariaDB/Podman)? [s/N] "
+        read -r _resposta
+        case "$_resposta" in
+          [sS])
+            echo "Parando processos..."
+            sudo pkill mariadb 2>/dev/null || true
+            sudo pkill podman  2>/dev/null || true
+            ;;
+          *)
+            echo "Mantendo processos existentes."
+            ;;
+        esac
+        echo ""
+      '';
+
       defaultHook = ''
         echo ""
         echo "Ambiente de desenvolvimento sem execução de base de dados (Tooling)"
@@ -23,7 +39,7 @@
         echo ""
       '';
 
-      nativeDbHook = ''
+      nativeDbHook = commonHook + ''
               DATA_DIR="$PWD/.mariadb-data"
               SOCKET_FILE="$DATA_DIR/mysql.sock"
               PID_FILE="$DATA_DIR/mariadb.pid"
@@ -67,7 +83,7 @@
               echo ""
       '';
 
-      podmanWslHook = ''
+      podmanWslHook = commonHook + ''
               export PODMAN_USERNS=keep-id
 
               export DOCKER_HOST="unix:///run/user/$(id -u)/podman/podman.sock"
