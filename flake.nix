@@ -16,22 +16,6 @@
         podman
       ];
 
-      commonHook = ''
-        printf "Matar processos anteriores (MariaDB/Podman)? [s/N] "
-        read -r _resposta
-        case "$_resposta" in
-          [sS])
-            echo "Parando processos..."
-            sudo pkill mariadb 2>/dev/null || true
-            sudo pkill podman  2>/dev/null || true
-            ;;
-          *)
-            echo "Mantendo processos existentes."
-            ;;
-        esac
-        echo ""
-      '';
-
       defaultHook = ''
         echo ""
         echo "Ambiente de desenvolvimento sem execução de base de dados (Tooling)"
@@ -39,51 +23,61 @@
         echo ""
       '';
 
-      nativeDbHook = commonHook + ''
-              DATA_DIR="$PWD/.mariadb-data"
-              SOCKET_FILE="$DATA_DIR/mysql.sock"
-              PID_FILE="$DATA_DIR/mariadb.pid"
+      localDBHook = ''
+        DATA_DIR="$PWD/.mariadb-data"
+        SOCKET_FILE="$DATA_DIR/mysql.sock"
+        PID_FILE="$DATA_DIR/mariadb.pid"
+        DB_PASS="root"
 
-              stop-db() {
-                if [ -f "$PID_FILE" ]; then
-                  echo "Parando MariaDB nativo..."
-                  kill $(cat "$PID_FILE") && rm -f "$PID_FILE"
-                else
-                  echo "MariaDB não está a correr."
-                fi
-              }
+        stop-db() {
+          if [ -f "$PID_FILE" ]; then
+            echo "Parando MariaDB nativo..."
+            kill $(cat "$PID_FILE") && rm -f "$PID_FILE"
+          else
+            echo "MariaDB não está rodando."
+          fi
+        }
+        trap stop-db EXIT
 
-              trap stop-db EXIT
+        if [ ! -d "$DATA_DIR" ]; then
+          echo "Criando e inicializando novo banco MariaDB local..."
+          mkdir -p "$DATA_DIR"
+          mysql_install_db \
+            --auth-root-authentication-method=normal \
+            --datadir="$DATA_DIR" \
+            --password="$DB_PASS" \
+            > /dev/null 2>&1
 
-              if [ ! -d "$DATA_DIR" ]; then
-                echo "Criando e inicializando novo banco MariaDB local..."
-                mkdir -p "$DATA_DIR"
-                mysql_install_db --auth-root-authentication-method=normal --datadir="$DATA_DIR" > /dev/null 2>&1
-                mariadbd --datadir="$DATA_DIR" --bootstrap <<EOF
-        CREATE DATABASE IF NOT EXISTS main;
+          mariadbd --datadir="$DATA_DIR" --bootstrap <<EOF
+        CREATE DATABASE IF NOT EXISTS \`main\`;
+        GRANT ALL PRIVILEGES ON \`main\`.* TO 'root'@'%' IDENTIFIED BY '$DB_PASS';
+        GRANT ALL PRIVILEGES ON \`main\`.* TO 'root'@'localhost' IDENTIFIED BY '$DB_PASS';
+        FLUSH PRIVILEGES;
         EOF
-              fi
+        fi
 
-              if [ ! -f "$PID_FILE" ]; then
-                echo "Iniciando MariaDB Nativo (rootless)..."
-                mariadbd --datadir="$DATA_DIR" \
-                         --socket="$SOCKET_FILE" \
-                         --pid-file="$PID_FILE" \
-                         --port=3306 \
-                         --bind-address=127.0.0.1 > "$DATA_DIR/mariadb.log" 2>&1 &
-                while [ ! -S "$SOCKET_FILE" ]; do sleep 0.1; done
-              else
-                echo "MariaDB já está a correr"
-              fi
+        if [ ! -f "$PID_FILE" ]; then
+          echo "Iniciando MariaDB (rootless)..."
+          mariadbd --datadir="$DATA_DIR" \
+                   --socket="$SOCKET_FILE" \
+                   --pid-file="$PID_FILE" \
+                   --port=3306 \
+                   --bind-address=127.0.0.1 > "$DATA_DIR/mariadb.log" 2>&1 &
+          while [ ! -S "$SOCKET_FILE" ]; do sleep 0.1; done
+        else
+          echo "MariaDB já está rodando"
+        fi
 
-              echo ""
-              echo "Informações do MariaDB (Nativo)"
-              echo " Host: 127.0.0.1  |  Port: 3306"
-              echo " User: root       |  DB:   main"
-              echo ""
+        echo "Informações do MariaDB (Nativo)"
+        echo " Host: 127.0.0.1  |  Port: 3306"
+        echo " User: root       |  Pass: $DB_PASS  |  DB: main"
+        echo " "
+        echo " Conectar via TCP:    mysql -h 127.0.0.1 -u root -p$DB_PASS"
+        echo " Conectar via Socket: mysql --socket=$SOCKET_FILE -u root -p$DB_PASS"
+        echo " Desligar:            stop-db"
       '';
 
-      podmanWslHook = commonHook + ''
+      podmanWslHook = ''
               export PODMAN_USERNS=keep-id
 
               export DOCKER_HOST="unix:///run/user/$(id -u)/podman/podman.sock"
@@ -152,9 +146,9 @@
           nativeBuildInputs = packageList;
           shellHook = defaultHook;
         };
-        Podman = pkgs.mkShell {
+        Native = pkgs.mkShell {
           nativeBuildInputs = packageList;
-          shellHook = nativeDbHook;
+          shellHook = localDBHook;
         };
         PodmanWSL = pkgs.mkShell {
           nativeBuildInputs = packageList;
