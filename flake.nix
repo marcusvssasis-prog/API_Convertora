@@ -68,6 +68,15 @@
       '';
 
       podmanWslHook = ''
+              export PODMAN_USERNS=keep-id
+
+              export DOCKER_HOST="unix:///run/user/$(id -u)/podman/podman.sock"
+
+              if ! podman info > /dev/null 2>&1; then
+                podman system service --time=0 &
+                sleep 1
+              fi
+
               PODMAN_DIR="$PWD/.podman-wsl"
               export XDG_CONFIG_HOME="$PODMAN_DIR/config"
               export XDG_DATA_HOME="$PODMAN_DIR/data"
