@@ -1,6 +1,6 @@
 # Como rodar:
 
-```cd api-convertora & nix develop .#Podman``` <- Se for UNIX
+```cd api-convertora & nix develop .#Native``` <- Se for UNIX
 ```cd api-convertora & nix develop .#PodmanWSL``` <- Se for WSL
 
 
@@ -49,7 +49,7 @@ curl -X POST localhost:3000/moedas \
 ```
 curl -X POST localhost:3000/moedas/${id}/cotacao \ # <- Verificar ID em listação de cotações \
   -H "Content-Type: application/json" \
-  -d '{"valor": 1'
+  -d '{"valor": 1}'
 ```
 
 # listar todas as moedas com cotações
@@ -66,7 +66,7 @@ curl localhost:3000/moedas/1 | jq
 ```
 curl -X PATCH localhost:3000/moedas/1 \
   -H "Content-Type: application/json" \
-  -d '{"nome": "USD"}
+  -d '{"nome": "USD"}'
 ```
 
 # deletar moeda (E suas cotaçẽos)
