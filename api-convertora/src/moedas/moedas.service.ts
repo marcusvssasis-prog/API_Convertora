@@ -31,8 +31,7 @@ export class MoedasService {
     if (!moeda) {
       throw new NotFoundException('Moeda não encontrada');
     }
-    const cotacao = this.cotacaoRepo.create({ valor, moeda });
-    return await this.cotacaoRepo.save(cotacao);
+    return await this.cotacaoRepo.save({ valor, moeda });
   }
 
   // GET /moedas — lista todas com cotações
