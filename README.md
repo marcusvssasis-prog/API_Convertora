@@ -1,6 +1,8 @@
 # Como rodar:
 
-```cd api-convertora & nix develop .#Podman```
+```cd api-convertora & nix develop .#Podman``` <- Se for UNIX
+```cd api-convertora & nix develop .#PodmanWSL``` <- Se for WSL
+
 
 - Verifique se houve erros na execução do DB.
 - Opcionalmente, para entrar com as ferramentas, sem executar novamente o container: ```nix develop```
@@ -19,7 +21,7 @@ Consultar conversões realizadas [X]; \
 --> Req: fetch no DB.;\
 Atualizar uma conversão existente []; \
 --> Req: Updt on DB.;\
-Converter valores utilizando taxas de câmbio atualizadas ou simuladas []; \
+Converter valores utilizando taxas de câmbio atualizadas ou simuladas [X]; \
 --> Req: (Teorico?) Criar valores simulados onde 'moeda' recebe de uma var (vinda de db?) que declara valor pre-conversão; \
 Persistir históricod de conversões []; \
 --> Req: Fazer que cada POST também anote seu resultado na DB. \
