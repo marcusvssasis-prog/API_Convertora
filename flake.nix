@@ -69,44 +69,31 @@
       '';
 
       dockerHook = ''
-        # Verifica se o daemon do Docker está rodando antes de prosseguir
+        # Verifica se o daemon do Docker está rodando
         if ! docker info > /dev/null 2>&1; then
           echo "Erro: O daemon do Docker não está rodando!"
-          echo "Por favor, inicie o Docker Desktop ou o serviço do Docker (sudo systemctl start docker) e tente novamente."
+          echo "Por favor, certifique-se de que o Docker está ativo e tente novamente."
         else
-          DOCKER_DIR="$PWD/.docker-mariadb"
+          # Cria a pasta local para evitar problemas de permissão (root) antes do compose subir
+          mkdir -p .docker-mariadb/storage
 
           start-container-db() {
-            echo "A iniciar contentor MariaDB via Docker..."
-            mkdir -p "$DOCKER_DIR/storage"
-
-            # Se o container já existir, apenas inicia
-            if docker ps -a --format "{{.Names}}" | grep -q "^mariadb-container$"; then
-              docker start mariadb-container
-            else
-              # Se não existir, cria e roda
-              docker run -d \
-                --name mariadb-container \
-                -p 3306:3306 \
-                -v "$DOCKER_DIR/storage:/var/lib/mysql" \
-                -e MARIADB_ALLOW_EMPTY_PASSWORD=yes \
-                -e MARIADB_DATABASE=main \
-                mariadb:latest
-            fi
-            echo "MariaDB ativo no Docker (Porta 3306)."
+            echo "A iniciar o MariaDB via Docker Compose..."
+            docker compose up -d
           }
 
           stop-container-db() {
-            echo "A parar contentor MariaDB no Docker..."
-            docker stop mariadb-container
+            echo "A parar os serviços do Docker Compose..."
+            docker compose down
           }
 
           start-container-db
           trap stop-container-db EXIT
 
           echo ""
-          echo "Ambiente Docker Ativo!"
-          echo " Comandos úteis: docker ps | stop-container-db | start-container-db"
+          echo "Ambiente Docker Compose Ativo!"
+          echo " O banco de dados fechará automaticamente quando você sair do shell."
+          echo " Comandos úteis: docker compose ps | docker compose logs -f"
           echo ""
         fi
       '';
