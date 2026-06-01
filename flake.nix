@@ -3,86 +3,137 @@
 
   outputs =
     { self, nixpkgs }:
-
     let
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
-      PackageList = with pkgs; [
+
+      packageList = with pkgs; [
         typescript-language-server
         nodejs
         nest-cli
         mariadb
         jq
+        podman
       ];
 
+      defaultHook = ''
+        echo ""
+        echo "Ambiente de desenvolvimento sem execução de base de dados (Tooling)"
+        echo "Alternativamente: Execute 'nix develop .#Podman' (Nativo) ou 'nix develop .#PodmanWSL' (Contentor)"
+        echo ""
+      '';
+
+      nativeDbHook = ''
+              DATA_DIR="$PWD/.mariadb-data"
+              SOCKET_FILE="$DATA_DIR/mysql.sock"
+              PID_FILE="$DATA_DIR/mariadb.pid"
+
+              stop-db() {
+                if [ -f "$PID_FILE" ]; then
+                  echo "Parando MariaDB nativo..."
+                  kill $(cat "$PID_FILE") && rm -f "$PID_FILE"
+                else
+                  echo "MariaDB não está a correr."
+                fi
+              }
+
+              trap stop-db EXIT
+
+              if [ ! -d "$DATA_DIR" ]; then
+                echo "Criando e inicializando novo banco MariaDB local..."
+                mkdir -p "$DATA_DIR"
+                mysql_install_db --auth-root-authentication-method=normal --datadir="$DATA_DIR" > /dev/null 2>&1
+                mariadbd --datadir="$DATA_DIR" --bootstrap <<EOF
+        CREATE DATABASE IF NOT EXISTS main;
+        EOF
+              fi
+
+              if [ ! -f "$PID_FILE" ]; then
+                echo "Iniciando MariaDB Nativo (rootless)..."
+                mariadbd --datadir="$DATA_DIR" \
+                         --socket="$SOCKET_FILE" \
+                         --pid-file="$PID_FILE" \
+                         --port=3306 \
+                         --bind-address=127.0.0.1 > "$DATA_DIR/mariadb.log" 2>&1 &
+                while [ ! -S "$SOCKET_FILE" ]; do sleep 0.1; done
+              else
+                echo "MariaDB já está a correr"
+              fi
+
+              echo ""
+              echo "Informações do MariaDB (Nativo)"
+              echo " Host: 127.0.0.1  |  Port: 3306"
+              echo " User: root       |  DB:   main"
+              echo ""
+      '';
+
+      podmanWslHook = ''
+              PODMAN_DIR="$PWD/.podman-wsl"
+              export XDG_CONFIG_HOME="$PODMAN_DIR/config"
+              export XDG_DATA_HOME="$PODMAN_DIR/data"
+              export XDG_RUNTIME_DIR="/tmp/podman-rt-$USER"
+
+              mkdir -p "$XDG_CONFIG_HOME/containers" "$XDG_DATA_HOME" "$XDG_RUNTIME_DIR"
+              chmod 700 "$XDG_RUNTIME_DIR"
+
+              if [ ! -f "$XDG_CONFIG_HOME/containers/policy.json" ]; then
+                cat <<EOF > "$XDG_CONFIG_HOME/containers/policy.json"
+        { "default": [{"type": "insecureAcceptAnything"}] }
+        EOF
+              fi
+
+              if [ ! -f "$XDG_CONFIG_HOME/containers/registries.conf" ]; then
+                cat <<EOF > "$XDG_CONFIG_HOME/containers/registries.conf"
+        [registries.search]
+        registries = ['docker.io', 'quay.io']
+        EOF
+              fi
+
+              start-container-db() {
+                echo "A iniciar contentor MariaDB via Podman..."
+                mkdir -p "$PODMAN_DIR/mariadb-storage"
+                if podman ps -a --format "{{.Names}}" | grep -q "^mariadb-wsl$"; then
+                  podman start mariadb-wsl
+                else
+                  podman run -d \
+                    --name mariadb-wsl \
+                    -p 3306:3306 \
+                    -v "$PODMAN_DIR/mariadb-storage:/var/lib/mysql:Z" \
+                    -e MARIADB_ROOT_PASSWORD=root \
+                    -e MARIADB_DATABASE=main \
+                    mariadb:latest
+                fi
+                echo "MariaDB ativo no Podman (Porta 3306)."
+              }
+
+              stop-container-db() {
+                echo "A parar contentor MariaDB..."
+                podman stop mariadb-wsl
+              }
+
+              start-container-db
+              trap stop-container-db EXIT
+
+              echo ""
+              echo "Ambiente Podman + WSL Ativo! ($PODMAN_DIR)"
+              echo " Comandos: podman ps | stop-container-db | start-container-db"
+              echo ""
+      '';
+
     in
-
     {
-
       devShells.${system} = {
         default = pkgs.mkShell {
-          nativeBuildInputs = [
-            PackageList
-
-          ];
-          shellHook = ''
-            echo "Ambiente de desenvolvimento sem execução de podman (Tooling) \n
-                    alternativamente: Executar nix develop .#Podman para entrar em um devShell com a execução do mariaDB"'';
+          nativeBuildInputs = packageList;
+          shellHook = defaultHook;
         };
         Podman = pkgs.mkShell {
-          nativeBuildInputs = [
-            PackageList
-          ];
-
-          shellHook = ''
-                      DATA_DIR="$PWD/.mariadb-data"
-                      SOCKET_FILE="$DATA_DIR/mysql.sock"
-                      PID_FILE="$DATA_DIR/mariadb.pid"
-
-                      stop-db() {
-                        if [ -f "$PID_FILE" ]; then
-                          echo "Parando MariaDB nativo..."
-                          kill $(cat "$PID_FILE") && rm -f "$PID_FILE"
-                        else
-                          echo "MariaDB não está rodando."
-                        fi
-                      }
-
-                      if [ ! -d "$DATA_DIR" ]; then
-                        echo "Criando e inicializando novo banco MariaDB local..."
-                        mkdir -p "$DATA_DIR"
-
-                        # Inicializa a estrutura de diretórios do banco
-                        mysql_install_db --auth-root-authentication-method=normal --datadir="$DATA_DIR" > /dev/null 2>&1
-
-                        # Cria o banco de dados 'main' automaticamente (equivalente ao MYSQL_DATABASE)
-                        mariadbd --datadir="$DATA_DIR" --bootstrap <<EOF
-            CREATE DATABASE IF NOT EXISTS main;
-            EOF
-                      fi
-
-                      if [ ! -f "$PID_FILE" ]; then
-                        echo "Iniciando MariaDB (rootless)..."
-                        mariadbd --datadir="$DATA_DIR" \
-                                 --socket="$SOCKET_FILE" \
-                                 --pid-file="$PID_FILE" \
-                                 --port=3306 \
-                                 --bind-address=127.0.0.1 > "$DATA_DIR/mariadb.log" 2>&1 &
-
-                        # Aguarda o banco iniciar e criar o arquivo de socket
-                        while [ ! -S "$SOCKET_FILE" ]; do sleep 0.1; done
-                      else
-                        echo "MariaDB já está rodando"
-                      fi
-
-                      echo "Informações do mariaDB (Nativo)"
-                      echo " Host: 127.0.0.1  |  Port: 3306"
-                      echo " User: root       |  DB:   main"
-                      echo " "
-                      echo " Conectar via TCP:    mysql -h 127.0.0.1 -u root"
-                      echo " Conectar via Socket: mysql --socket=$SOCKET_FILE -u root"
-                      echo " Desligar:            command: stop-db"
-          '';
+          nativeBuildInputs = packageList;
+          shellHook = nativeDbHook;
+        };
+        PodmanWSL = pkgs.mkShell {
+          nativeBuildInputs = packageList;
+          shellHook = podmanWslHook;
         };
       };
     };
