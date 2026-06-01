@@ -13,13 +13,13 @@
         nest-cli
         mariadb
         jq
-        podman
+        docker
       ];
 
       defaultHook = ''
         echo ""
         echo "Ambiente de desenvolvimento sem execução de base de dados (Tooling)"
-        echo "Alternativamente: Execute 'nix develop .#Native' (Linux) ou 'nix develop .#PodmanWSL' (Container)"
+        echo "Alternativamente: Execute 'nix develop .#Native' (Nativo) ou 'nix develop .#Docker' (Container)"
         echo ""
       '';
 
@@ -42,10 +42,7 @@
           echo "Criando e inicializando novo banco MariaDB local..."
           mkdir -p "$DATA_DIR"
 
-          # Inicializa a estrutura de diretórios do banco (sem senha)
           mysql_install_db --auth-root-authentication-method=normal --datadir="$DATA_DIR" > /dev/null 2>&1
-
-          # Cria o banco 'main' usando um pipe simples (evita o bug do EOF)
           echo "CREATE DATABASE IF NOT EXISTS main;" | mariadbd --datadir="$DATA_DIR" --bootstrap
         fi
 
@@ -57,7 +54,6 @@
                    --port=3306 \
                    --bind-address=127.0.0.1 > "$DATA_DIR/mariadb.log" 2>&1 &
 
-          # Aguarda o banco iniciar e criar o arquivo de socket
           while [ ! -S "$SOCKET_FILE" ]; do sleep 0.1; done
         else
           echo "MariaDB já está rodando"
@@ -72,65 +68,47 @@
         echo " Desligar:            stop-db"
       '';
 
-      podmanWslHook = ''
-        export PODMAN_USERNS=keep-id
-        export DOCKER_HOST="unix:///run/user/$(id -u)/podman/podman.sock"
+      dockerHook = ''
+        # Verifica se o daemon do Docker está rodando antes de prosseguir
+        if ! docker info > /dev/null 2>&1; then
+          echo "Erro: O daemon do Docker não está rodando!"
+          echo "Por favor, inicie o Docker Desktop ou o serviço do Docker (sudo systemctl start docker) e tente novamente."
+        else
+          DOCKER_DIR="$PWD/.docker-mariadb"
 
-        if ! podman info > /dev/null 2>&1; then
-          podman system service --time=0 &
-          sleep 1
+          start-container-db() {
+            echo "A iniciar contentor MariaDB via Docker..."
+            mkdir -p "$DOCKER_DIR/storage"
+
+            # Se o container já existir, apenas inicia
+            if docker ps -a --format "{{.Names}}" | grep -q "^mariadb-container$"; then
+              docker start mariadb-container
+            else
+              # Se não existir, cria e roda
+              docker run -d \
+                --name mariadb-container \
+                -p 3306:3306 \
+                -v "$DOCKER_DIR/storage:/var/lib/mysql" \
+                -e MARIADB_ALLOW_EMPTY_PASSWORD=yes \
+                -e MARIADB_DATABASE=main \
+                mariadb:latest
+            fi
+            echo "MariaDB ativo no Docker (Porta 3306)."
+          }
+
+          stop-container-db() {
+            echo "A parar contentor MariaDB no Docker..."
+            docker stop mariadb-container
+          }
+
+          start-container-db
+          trap stop-container-db EXIT
+
+          echo ""
+          echo "Ambiente Docker Ativo!"
+          echo " Comandos úteis: docker ps | stop-container-db | start-container-db"
+          echo ""
         fi
-
-        PODMAN_DIR="$PWD/.podman-wsl"
-        export XDG_CONFIG_HOME="$PODMAN_DIR/config"
-        export XDG_DATA_HOME="$PODMAN_DIR/data"
-        export XDG_RUNTIME_DIR="/tmp/podman-rt-$USER"
-
-        mkdir -p "$XDG_CONFIG_HOME/containers" "$XDG_DATA_HOME" "$XDG_RUNTIME_DIR"
-        chmod 700 "$XDG_RUNTIME_DIR"
-
-        if [ ! -f "$XDG_CONFIG_HOME/containers/policy.json" ]; then
-          cat <<EOF > "$XDG_CONFIG_HOME/containers/policy.json"
-        { "default": [{"type": "insecureAcceptAnything"}] }
-        EOF
-        fi
-
-        if [ ! -f "$XDG_CONFIG_HOME/containers/registries.conf" ]; then
-          cat <<EOF > "$XDG_CONFIG_HOME/containers/registries.conf"
-        [registries.search]
-        registries = ['docker.io', 'quay.io']
-        EOF
-        fi
-
-        start-container-db() {
-          echo "A iniciar contentor MariaDB via Podman..."
-          mkdir -p "$PODMAN_DIR/mariadb-storage"
-          if podman ps -a --format "{{.Names}}" | grep -q "^mariadb-wsl$"; then
-            podman start mariadb-wsl
-          else
-            podman run -d \
-              --name mariadb-wsl \
-              -p 3306:3306 \
-              -v "$PODMAN_DIR/mariadb-storage:/var/lib/mysql:Z" \
-              -e MARIADB_ALLOW_EMPTY_PASSWORD=yes \
-              -e MARIADB_DATABASE=main \
-              mariadb:latest
-          fi
-          echo "MariaDB ativo no Podman (Porta 3306)."
-        }
-
-        stop-container-db() {
-          echo "A parar contentor MariaDB..."
-          podman stop mariadb-wsl
-        }
-
-        start-container-db
-        trap stop-container-db EXIT
-
-        echo ""
-        echo "Ambiente Podman + WSL Ativo! ($PODMAN_DIR)"
-        echo " Comandos: podman ps | stop-container-db | start-container-db"
-        echo ""
       '';
 
     in
@@ -144,9 +122,9 @@
           nativeBuildInputs = packageList;
           shellHook = Native;
         };
-        PodmanWSL = pkgs.mkShell {
+        Docker = pkgs.mkShell {
           nativeBuildInputs = packageList;
-          shellHook = podmanWslHook;
+          shellHook = dockerHook;
         };
       };
     };
