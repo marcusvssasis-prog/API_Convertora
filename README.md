@@ -1,80 +1,82 @@
-Para rodar:
+# Como rodar:
 
-```
-npm install # Se tiver clonado agora, só uma vez.
-npm run start:dev # Rodar o nest em si.
+```cd api-convertora & nix develop .#Native``` <- Se for UNIX
+```cd api-convertora & nix develop .#PodmanWSL``` <- Se for WSL
 
+
+- Verifique se houve erros na execução do DB.
+- Opcionalmente, para entrar com as ferramentas, sem executar novamente o container: ```nix develop```
+
+e então: \
+
+```npm run start:dev```
+
+ Após isso abra outro terminal para executar as ações de GET/POST
+
+
+Tasks:
+Criar conversão de moeda [X]; \
+--> Req: Capacidade do Nest criar tabela na DB [X] (Preforma) com esses (Provaveis) valores:
+Consultar conversões realizadas [X]; \
+--> Req: fetch no DB.;\
+Atualizar uma conversão existente []; \
+--> Req: Updt on DB.;\
+Converter valores utilizando taxas de câmbio atualizadas ou simuladas [X]; \
+--> Req: (Teorico?) Criar valores simulados onde 'moeda' recebe de uma var (vinda de db?) que declara valor pre-conversão; \
+Persistir históricod de conversões []; \
+--> Req: Fazer que cada POST também anote seu resultado na DB. \
+Tratamento de exceções []; \
+--> Req: idk, native? \
+
+Subtasks (dependências):
+--> Conectar o Nest ao MariaDB [X];
+--> ShellHook do devshell para executar podman & MariaDB (Rootless) [X];
+
+Curls Atuais / Exemplos:
+
+{moeda} -> codigo 3 digitos moeda, aka, BRL, EUR... (STRING) \
+{valor} -> valor (INT) \
+_Pass de JQ para leitura, tool disponivel no flake._ \
+
+# criar moeda
+```
+curl -X POST localhost:3000/moedas \
+  -H "Content-Type: application/json" \
+  -d '{"nome": "NOME"}'
 ```
 
---> Requires: \
+# Empurra valor de cotação a moeda criada
+```
+curl -X POST localhost:3000/moedas/${id}/cotacao \ # <- Verificar ID em listação de cotações \
+  -H "Content-Type: application/json" \
+  -d '{"valor": 1}'
+```
 
-    nodejs (com nest-cli instalado) ou nix usando nix flake develop no diretório atual. \
+# listar todas as moedas com cotações
+```
+curl localhost:3000/moedas | jq
+```
 
---> Arquitetura e Estrutura (Clean Architecture & SOLID): \
-[X] ---> Estruturar o projeto de forma modular no NestJS \
-[X] ---> Aplicar conceitos de Programação Orientada a Objetos (POO) \
-[ ] ---> Camada de Negócio: Criar classes, interfaces de repositório e isolar regras de negócio \
-[ ] ---> Camada de Dados: Implementar repositórios, configurar ORM/Banco \
-[X] ---> Integrar API externa de câmbio \
-[ ] ---> Camada de Aplicação (Presentation): Criar controllers, mapear requests/responses e validar entradas \
---> Regras de Negócio e Validações: \
-[ ] ---> Validar se o valor monetário recebido é maior que zero \
-[ ] ---> Validar se a moeda de origem informada é válida \
-[ ] ---> Garantir que as conversões gerem sempre valores em USD e EUR \
-[ ] ---> Criar condição caso o valor solicitado já seja USD ou EUR \
-[ ] ---> Desacoplar as taxas de câmbio das regras de negócio principais \
---> Endpoints (Operações CRUD): \
-[ ] ---> POST /conversions: Criar uma conversão de moeda (recebendo amount e fromCurrency) \
-[ ] ---> GET /conversions: Listar todas as conversões realizadas (histórico) \
-[ ] ---> GET /conversions/{id}: Consultar uma conversão específica \
-[ ] ---> PUT /conversions/{id}: Atualizar uma conversão existente (ex: atualizar o amount) \
-[] ---> DELETE /conversions/{id}: Remover uma conversão \
---> Funcionalidades e Requisitos Técnicos: \
-[ ] ---> Conexão a uma API de valor atual da moeda \
-[ ] ---> Ferramentas comparativas \
-[ ] ---> Converter valores utilizando taxas de câmbio atualizadas ou simuladas \
-[ ] ---> Persistir histórico de conversões no banco de dados \
-[ ] ---> Utilizar DTOs (Data Transfer Objects) para trafegar os dados \
-[ ] ---> Implementar tratamento de erros básicos e exceções \
---> Tech Obrigatórias: \
-[X] ---> NestJS \
-[X] ---> TypeScript \
-[ ] ---> MongoDB ou MySQL \
---> Desafios Extras (Evolução do Projeto): \
-[ ] ---> Implementar validação de dados utilizando class-validator \
-[ ] ---> Criar documentação automática da API utilizando Swagger/OpenAPI <-- Ou até alguma coisa do OpenRouter (DeepSeek). \
---> Documentação e Entrega (Até 01 de Junho de 2026): \
-[ ] ---> Garantir que o projeto tem uma estrutura de pastas organizada e está funcional \
-[ ] ---> Hospedar o código no GitHub (Todos os membros do grupo devem realizar commits) \
-[ ] ---> Criar arquivo README.md contendo: \
-[ ] - Descrição do projeto \
-[ ] - Tecnologias utilizadas \
-[ ] - Instruções de instalação \
-[ ] - Instruções para execução \
-[ ] - Documentação das rotas da API \
-[ ] ---> Preparar a apresentação para o dia da AV2 \
+# buscar moeda específica
+```
+curl localhost:3000/moedas/1 | jq
+```
 
-Rotas atuais:
+# atualizar nome
+```
+curl -X PATCH localhost:3000/moedas/1 \
+  -H "Content-Type: application/json" \
+  -d '{"nome": "USD"}'
+```
 
-[X] ---> ```/moedas```, função: Recebe retorno do câmbio atual de todas moedas aparti da API externa. (Possui parser):
+# deletar moeda (E suas cotaçẽos)
+curl -X DELETE localhost:3000/moedas/3
 
+# converter
 ```
-curl http://127.0.0.1:3000/moedas
+curl -X POST localhost:3000/moedas/converter \
+  -H "Content-Type: application/json" \
+  -d '{"from": "moeda", "to": "moeda", "amount": 1}' | jq
 ```
-ou com parser
-```
-curl http://127.0.0.1:3000/moedas/parser
-```
-[X] ---> ```/converter```, função: Recebe um corpo json: (Possui parser)
 
---> Sem parser
-```
-curl -X POST http://localhost:3000/moedas/converter \
-         -H "Content-Type: application/json" \
-         -d '{"amount": 100, "fromCurrency": "USD", "toCurrency": "BRL"}'
-```
-```
-curl -X POST http://localhost:3000/moedas/converter/parser \
-         -H "Content-Type: application/json" \
-         -d '{"amount": 100, "fromCurrency": "USD", "toCurrency": "BRL"}'
-```
+
