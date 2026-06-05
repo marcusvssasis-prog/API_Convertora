@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { MoedasService } from './moedas.service';
 import { CreateMoedaDto } from './dto/create-moeda.dto';
 import { UpdateMoedaDto } from './dto/update-moeda.dto';
+import { UpdateCotacaoDto } from './dto/update-cotacao.dto';
 
 @Controller('moedas')
 export class MoedasController {
@@ -21,6 +22,16 @@ export class MoedasController {
   addCotacao(@Param('id') id: string, @Body('valor') valor: number) {
     return this.moedasService.addCotacao(+id, valor);
   }
+
+// Substituir cotacao  
+  @Patch('cotacao/:id')
+  async updateCotacao(
+    @Param('id') id: number,
+    @Body() dto: UpdateCotacaoDto
+  ) {
+    return await this.moedasService.updateCotacao(id, dto);
+  }
+
 
   @Get()
   findAll() {

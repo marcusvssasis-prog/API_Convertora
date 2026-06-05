@@ -37,6 +37,16 @@ let MoedasService = class MoedasService {
         const cotacao = this.cotacaoRepo.create({ valor, moeda });
         return await this.cotacaoRepo.save(cotacao);
     }
+    async updateCotacao(id, dto) {
+        const cotacaoExiste = await this.cotacaoRepo.findOneBy({ id });
+        if (!cotacaoExiste) {
+            throw new common_1.NotFoundException(`Cotação com ID ${id} não encontrada`);
+        }
+        await this.cotacaoRepo.update(id, { valor: dto.valor });
+        return await this.cotacaoRepo.findOneOrFail({
+            where: { id },
+        });
+    }
     async findAll() {
         return await this.moedaRepo.find({ relations: { cotacoes: true } });
     }

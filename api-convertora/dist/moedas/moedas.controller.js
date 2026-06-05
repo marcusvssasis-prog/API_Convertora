@@ -17,6 +17,7 @@ const common_1 = require("@nestjs/common");
 const moedas_service_1 = require("./moedas.service");
 const create_moeda_dto_1 = require("./dto/create-moeda.dto");
 const update_moeda_dto_1 = require("./dto/update-moeda.dto");
+const update_cotacao_dto_1 = require("./dto/update-cotacao.dto");
 let MoedasController = class MoedasController {
     moedasService;
     constructor(moedasService) {
@@ -30,6 +31,9 @@ let MoedasController = class MoedasController {
     }
     addCotacao(id, valor) {
         return this.moedasService.addCotacao(+id, valor);
+    }
+    async updateCotacao(id, dto) {
+        return await this.moedasService.updateCotacao(id, dto);
     }
     findAll() {
         return this.moedasService.findAll();
@@ -67,6 +71,14 @@ __decorate([
     __metadata("design:paramtypes", [String, Number]),
     __metadata("design:returntype", void 0)
 ], MoedasController.prototype, "addCotacao", null);
+__decorate([
+    (0, common_1.Patch)('cotacao/:id'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, update_cotacao_dto_1.UpdateCotacaoDto]),
+    __metadata("design:returntype", Promise)
+], MoedasController.prototype, "updateCotacao", null);
 __decorate([
     (0, common_1.Get)(),
     __metadata("design:type", Function),

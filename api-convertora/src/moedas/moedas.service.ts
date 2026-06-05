@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from "typeorm";
 import { Moeda } from './entities/moeda.entity';
 import { CotacaoMoeda } from './entities/cotacao-moeda.entity';
+import { UpdateCotacaoDto } from './dto/update-cotacao.dto';
 
 
 @Injectable()
@@ -30,6 +31,23 @@ export class MoedasService {
     }
     const cotacao = this.cotacaoRepo.create({ valor, moeda });
     return await this.cotacaoRepo.save(cotacao);
+  }
+
+  // Modificar cotacao ja existente no banco
+  async updateCotacao(id: number, dto: UpdateCotacaoDto): Promise<CotacaoMoeda> {
+    // 1. Verifica se a cotação realmente existe no banco antes de atualizar
+    const cotacaoExiste = await this.cotacaoRepo.findOneBy({ id });
+
+    if (!cotacaoExiste) {
+      throw new NotFoundException(`Cotação com ID ${id} não encontrada`)
+    }
+
+    //2. Atualiza o valor no MariaDB
+    await this.cotacaoRepo.update(id, { valor: dto.valor}); 
+
+    return await this.cotacaoRepo.findOneOrFail({
+      where: { id },
+    });
   }
 
   // GET /moedas — lista todas com cotações
