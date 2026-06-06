@@ -5,7 +5,7 @@ services:
     ports:
       - "3306:3306"
     environment:
-       MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: "yes"
+      MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: "yes"
       MARIADB_DATABASE: main
     volumes:
       - ./.docker-mariadb/storage:/var/lib/mysql
