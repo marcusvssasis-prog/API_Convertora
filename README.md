@@ -19,7 +19,7 @@ Criar conversão de moeda [X]; \
 --> Req: Capacidade do Nest criar tabela na DB [X] (Preforma) com esses (Provaveis) valores:
 Consultar conversões realizadas [X]; \
 --> Req: fetch no DB.;\
-Atualizar uma conversão existente []; \
+Atualizar uma conversão existente [X]; \
 --> Req: Updt on DB.;\
 Converter valores utilizando taxas de câmbio atualizadas ou simuladas [X]; \
 --> Req: (Teorico?) Criar valores simulados onde 'moeda' recebe de uma var (vinda de db?) que declara valor pre-conversão; \
@@ -38,6 +38,12 @@ Curls Atuais / Exemplos:
 {valor} -> valor (INT) \
 _Pass de JQ para leitura, tool disponivel no flake._ \
 
+# Docker
+```
+docker compose up <-- Liga o banco / 
+docker compose down <-- Desliga
+```
+
 # criar moeda
 ```
 curl -X POST localhost:3000/moedas \
@@ -47,9 +53,20 @@ curl -X POST localhost:3000/moedas \
 
 # Empurra valor de cotação a moeda criada
 ```
-curl -X POST localhost:3000/moedas/${id}/cotacao \ # <- Verificar ID em listação de cotações \
+id="1"
+curl -X POST http://localhost:3000/moedas/${id}/cotacao \
   -H "Content-Type: application/json" \
-  -d '{"valor": 1}'
+  -d '{"valor": 100}'
+
+```
+# Modificar uma cotaçao ja existente
+
+```
+id=1
+curl -X PATCH localhost:3000/moedas/cotacao/${id} \
+  -H "Content-Type: application/json" \
+  -d '{"valor": 6.26}'
+
 ```
 
 # listar todas as moedas com cotações
