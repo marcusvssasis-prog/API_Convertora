@@ -14,8 +14,8 @@ export declare class MoedasController {
         to: string;
         amount: number;
         resultado: number;
-        taxaFrom: number;
-        taxaTo: number;
+        taxaFrom: any;
+        taxaTo: any;
     }>;
     create(createMoedaDto: CreateMoedaDto): Promise<import("./entities/moeda.entity").Moeda>;
     addCotacao(id: string, valor: number): Promise<import("./entities/cotacao-moeda.entity").CotacaoMoeda>;

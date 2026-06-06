@@ -20,7 +20,7 @@ export declare class MoedasService {
         to: string;
         amount: number;
         resultado: number;
-        taxaFrom: number;
-        taxaTo: number;
+        taxaFrom: any;
+        taxaTo: any;
     }>;
 }

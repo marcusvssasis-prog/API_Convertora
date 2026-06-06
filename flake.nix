@@ -14,6 +14,7 @@
         mariadb
         jq
         docker
+        bun
       ];
 
       defaultHook = ''
