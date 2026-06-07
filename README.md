@@ -25,7 +25,7 @@ Converter valores utilizando taxas de câmbio atualizadas ou simuladas [X]; \
 --> Req: (Teorico?) Criar valores simulados onde 'moeda' recebe de uma var (vinda de db?) que declara valor pre-conversão; \
 Persistir históricod de conversões []; \
 --> Req: Fazer que cada POST também anote seu resultado na DB. \
-Tratamento de exceções []; \
+Tratamento de exceções [x]; \
 --> Req: idk, native? \
 
 Subtasks (dependências):
