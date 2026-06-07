@@ -26,13 +26,19 @@ let MoedasService = class MoedasService {
         this.cotacaoRepo = cotacaoRepo;
     }
     async create(dto) {
+        const existente = await this.moedaRepo.findOne({
+            where: { nome: dto.nome },
+        });
+        if (existente) {
+            throw new common_1.ConflictException(`Moeda já existe com id ${existente.id}`);
+        }
         const moeda = this.moedaRepo.create({ nome: dto.nome });
         return await this.moedaRepo.save(moeda);
     }
     async addCotacao(id, valor) {
         const moeda = await this.moedaRepo.findOneBy({ id });
         if (!moeda) {
-            throw new common_1.NotFoundException("Moeda com ID ${id} não encontrada");
+            throw new common_1.NotFoundException(`Moeda com ID ${id} não encontrada`);
         }
         const cotacao = this.cotacaoRepo.create({ valor, moeda });
         return await this.cotacaoRepo.save(cotacao);
@@ -56,7 +62,7 @@ let MoedasService = class MoedasService {
             relations: { cotacoes: true },
         });
         if (!moeda) {
-            throw new common_1.NotFoundException("Moeda com ID ${ID)  não encontrada");
+            throw new common_1.NotFoundException(`Moeda com ID ${id} não encontrada`);
         }
         return moeda;
     }

@@ -1,4 +1,4 @@
-import { NotFoundException, Injectable, BadRequestException } from '@nestjs/common';
+import { ConflictException, NotFoundException, Injectable, BadRequestException } from '@nestjs/common';
 import { CreateMoedaDto } from './dto/create-moeda.dto';
 import { UpdateMoedaDto } from './dto/update-moeda.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -16,18 +16,26 @@ export class MoedasService {
     @InjectRepository(CotacaoMoeda)
     private cotacaoRepo: Repository<CotacaoMoeda>
   ) { }
+// POST /moedas — cria nova moeda
+ async create(dto: CreateMoedaDto): Promise<Moeda> {
+  const existente = await this.moedaRepo.findOne({
+    where: { nome: dto.nome },
+  });
 
-  // POST /moedas — registra a moeda
-  async create(dto: CreateMoedaDto): Promise<Moeda> {
-    const moeda = this.moedaRepo.create({ nome: dto.nome });
-    return await this.moedaRepo.save(moeda);
+  if (existente) {
+    throw new ConflictException(
+      `Moeda já existe com id ${existente.id}`,
+    );
   }
 
+  const moeda = this.moedaRepo.create({ nome: dto.nome });
+  return await this.moedaRepo.save(moeda);
+}
   // POST /moedas/:id/cotacao — adiciona valor à moeda
   async addCotacao(id: number, valor: number): Promise<CotacaoMoeda> {
     const moeda = await this.moedaRepo.findOneBy({ id });
     if (!moeda) {
-      throw new NotFoundException("Moeda com ID ${id} não encontrada");
+      throw new NotFoundException(`Moeda com ID ${id} não encontrada`);
     }
     const cotacao = this.cotacaoRepo.create({ valor, moeda });
     return await this.cotacaoRepo.save(cotacao);
@@ -63,7 +71,7 @@ export class MoedasService {
     });
 
     if (!moeda) {
-      throw new NotFoundException("Moeda com ID ${ID)  não encontrada");
+      throw new NotFoundException(`Moeda com ID ${id} não encontrada`);
     }
     return moeda;
   }
