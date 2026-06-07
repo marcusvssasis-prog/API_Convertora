@@ -18,6 +18,7 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const moeda_entity_1 = require("./entities/moeda.entity");
 const cotacao_moeda_entity_1 = require("./entities/cotacao-moeda.entity");
+const typeorm_3 = require("typeorm");
 let MoedasService = class MoedasService {
     moedaRepo;
     cotacaoRepo;
@@ -26,14 +27,22 @@ let MoedasService = class MoedasService {
         this.cotacaoRepo = cotacaoRepo;
     }
     async create(dto) {
-        const existente = await this.moedaRepo.findOne({
-            where: { nome: dto.nome },
-        });
-        if (existente) {
-            throw new common_1.ConflictException(`Moeda já existe com id ${existente.id}`);
+        try {
+            const existente = await this.moedaRepo.findOne({
+                where: { nome: dto.nome },
+            });
+            if (existente) {
+                throw new common_1.ConflictException(`Moeda já existe com id ${existente.id}`);
+            }
+            const moeda = this.moedaRepo.create({ nome: dto.nome });
+            return await this.moedaRepo.save(moeda);
         }
-        const moeda = this.moedaRepo.create({ nome: dto.nome });
-        return await this.moedaRepo.save(moeda);
+        catch (error) {
+            if (error instanceof typeorm_3.QueryFailedError) {
+                throw new common_1.ConflictException('Moeda já existe');
+            }
+            throw error;
+        }
     }
     async addCotacao(id, valor) {
         const moeda = await this.moedaRepo.findOneBy({ id });
