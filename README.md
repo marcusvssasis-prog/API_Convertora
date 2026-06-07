@@ -2,6 +2,7 @@
 
 ```cd api-convertora & nix develop .#Native``` <- Se for UNIX
 ```cd api-convertora & nix develop .#PodmanWSL``` <- Se for WSL
+```./exec.sh``` e depois ```cd api-convertora``` <- Se for UNIX - Sem Nix (Compativel com Mac, UNIX like.)
 
 
 - Verifique se houve erros na execução do DB.
@@ -40,7 +41,7 @@ _Pass de JQ para leitura, tool disponivel no flake._ \
 
 # Docker
 ```
-docker compose up <-- Liga o banco / 
+docker compose up <-- Liga o banco /
 docker compose down <-- Desliga
 ```
 
@@ -69,7 +70,7 @@ curl -X PATCH localhost:3000/moedas/cotacao/${id} \
 
 ```
 
-# listar todas as moedas com cotações
+# listar todas as moedas adicionadas com cotações
 ```
 curl localhost:3000/moedas | jq
 ```
@@ -83,7 +84,7 @@ curl localhost:3000/moedas/1 | jq
 ```
 curl -X PATCH localhost:3000/moedas/1 \
   -H "Content-Type: application/json" \
-  -d '{"nome": "USD"}'
+  -d '{"nome": "nome"}'
 ```
 
 # deletar moeda (E suas cotaçẽos)
@@ -101,7 +102,7 @@ curl -X POST localhost:3000/moedas/converter \
 ```
 MOEDAS DISPONIVEIS:
 
-REAL -> BRL 
+REAL -> BRL
 Tem valor fixo de 1
 
 DOLAR -> USD
@@ -114,8 +115,6 @@ EURO -> EUR
 12:00 ate 17:00 -> 1 euro vale R$7.60
 17:00 ate 6:59 -> 1 euro vale R$8.00
 
-PARA EXECUTAR O COMANDO ESCREVA NO TERMINAL:
-
 curl -X POST "http://localhost:3000/moedas/converter" \
 -H "Content-Type: application/json" \
 -d '{
@@ -124,5 +123,4 @@ curl -X POST "http://localhost:3000/moedas/converter" \
   "amount": 10
 }'
 
-OBS:Infelizmente o resultado so exibido no terminal, por se tratar de um post
 ```
