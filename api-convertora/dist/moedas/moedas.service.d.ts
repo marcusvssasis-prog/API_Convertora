@@ -22,5 +22,7 @@ export declare class MoedasService {
         resultado: number;
         taxaFrom: number;
         taxaTo: number;
+        horarioReferencia: string;
     }>;
+    private getTaxaMoedaFixa;
 }

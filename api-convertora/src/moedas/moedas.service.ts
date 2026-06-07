@@ -27,7 +27,7 @@ export class MoedasService {
   async addCotacao(id: number, valor: number): Promise<CotacaoMoeda> {
     const moeda = await this.moedaRepo.findOneBy({ id });
     if (!moeda) {
-      throw new NotFoundException("Moeda com ID ${id} não encontrada");
+      throw new NotFoundException(`Moeda com ID ${id} não encontrada`);
     }
     const cotacao = this.cotacaoRepo.create({ valor, moeda });
     return await this.cotacaoRepo.save(cotacao);
@@ -63,7 +63,7 @@ export class MoedasService {
     });
 
     if (!moeda) {
-      throw new NotFoundException("Moeda com ID ${ID)  não encontrada");
+      throw new NotFoundException(`Moeda com ID ${id} não encontrada`);
     }
     return moeda;
   }
@@ -77,30 +77,87 @@ export class MoedasService {
   async remove(id: number): Promise<void> {
     await this.moedaRepo.delete(id);
   }
+
   async converter(from: string, to: string, amount: number) {
-    // pega a ultima cotacao
-    const moedaFrom = await this.moedaRepo.findOne({
-      where: { nome: from },
-      relations: { cotacoes: true }
+    if (!from || !to || !amount) {
+      throw new BadRequestException('Voce precisa enviar from, to e amount no corpo (JSON) da requisicao')
+    }
+    // pega a hora atual do servidor fixa no fuso de Brasilia/Recife
+    const agora = new Date();
+    const horaAtualStr = agora.toLocaleTimeString('pt-BR', {
+      timeZone: 'America/Recife',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
     });
-    const moedaTo = await this.moedaRepo.findOne({
-      where: { nome: to },
-      relations: { cotacoes: true }
-    });
+     // Tenta pegar o valor das moedas direto da logica da funcao de flutuacao
+    let taxaFrom = this.getTaxaMoedaFixa(from, horaAtualStr);
+    let taxaTo = this.getTaxaMoedaFixa(to, horaAtualStr);
 
-    if (!moedaFrom || !moedaTo) throw new NotFoundException('Moeda não encontrada');
-    if (!moedaFrom.cotacoes.length || !moedaTo.cotacoes.length)
-      throw new BadRequestException('Moeda sem cotação registrada');
+    // Se a moeda da 'from' nao for fixa, busca busca ela e a ultima cotcao no banco
+    if (taxaFrom === null) {
+      const moedaFrom = await this.moedaRepo.findOne({
+        where: { nome: from},
+        relations: { cotacoes: true}
+      });
+      if (!moedaFrom) throw new NotFoundException(`Moeda ${from} nao encontrada no banco`);
+      if (!moedaFrom.cotacoes.length) throw new BadRequestException(`Moeda ${from} sem cotacao`);
+    
+      taxaFrom = moedaFrom.cotacoes
+        .sort((a, b) => b.dataModificacao.getTime() - a.dataModificacao.getTime())[0].valor;   
+    }
+      // Se a moeda 'to' nao for fixa, mesma logica
+      if (taxaTo === null) {
+        const moedaTo = await this.moedaRepo.findOne({
+          where: { nome: to },
+          relations: { cotacoes: true }
+        });
+        if (!moedaTo) throw new NotFoundException(`Moeda ${to} nao encontrada no banco`);
+        if (!moedaTo.cotacoes.length) throw new BadRequestException(`Moeda ${to} sem cotacao`);
 
-    // cotacao por dataModificacao
-    const taxaFrom = moedaFrom.cotacoes
-      .sort((a, b) => b.dataModificacao.getTime() - a.dataModificacao.getTime())[0].valor;
+        taxaTo = moedaTo.cotacoes
+        .sort((a, b) => b.dataModificacao.getTime() - a.dataModificacao.getTime())[0].valor;  
+      }
 
-    const taxaTo = moedaTo.cotacoes
-      .sort((a, b) => b.dataModificacao.getTime() - a.dataModificacao.getTime())[0].valor;
+      // calcula o resultado final
+      const resultado = amount * (taxaFrom / taxaTo);
 
-    const resultado = amount * (taxaTo / taxaFrom);
+      return {
+        from,
+        to,
+        amount,
+        resultado,
+        taxaFrom,
+        taxaTo,
+        horarioReferencia: horaAtualStr
+      };
+    }
 
-    return { from, to, amount, resultado, taxaFrom, taxaTo };
+    // Funçao de flutuacao de moedas 
+
+    private getTaxaMoedaFixa(nomeDaMoeda: string, horarioAtual: string): number | null {
+       // A moeda base e Real que tem um valor fixo de 1
+      if (nomeDaMoeda == 'BRL') return 1.0;
+    
+       // caracteres de hora e minuto "HH:mm" para facilitar a comparação
+      const hAtual = horarioAtual.substring(0, 5);
+      
+      // Regras de flutuacao do preco do dolar
+      if (nomeDaMoeda === 'USD') {
+        if (hAtual >= '07:00' && hAtual < '12:00') return 5.00;
+        if (hAtual >= '12:00' && hAtual < '17:00') return 5.20;
+        return 7.00;
+      }
+
+      // Regra de flutuaçao do Euro
+      if (nomeDaMoeda === 'EUR') {
+        if (hAtual >= '07:00' && hAtual < '12:00') return 5.40;
+        if (hAtual >= '12:00' && hAtual < '17:00') return 7.60;
+        return 8.00;
+      }
+
+      // Se nenhuma das moedas acima BRL, USD ou EUR for reconhecida, retorna nulo.
+      return null;
   }
 }
+

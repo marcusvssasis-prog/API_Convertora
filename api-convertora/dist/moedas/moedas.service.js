@@ -32,7 +32,7 @@ let MoedasService = class MoedasService {
     async addCotacao(id, valor) {
         const moeda = await this.moedaRepo.findOneBy({ id });
         if (!moeda) {
-            throw new common_1.NotFoundException("Moeda com ID ${id} não encontrada");
+            throw new common_1.NotFoundException(`Moeda com ID ${id} não encontrada`);
         }
         const cotacao = this.cotacaoRepo.create({ valor, moeda });
         return await this.cotacaoRepo.save(cotacao);
@@ -56,7 +56,7 @@ let MoedasService = class MoedasService {
             relations: { cotacoes: true },
         });
         if (!moeda) {
-            throw new common_1.NotFoundException("Moeda com ID ${ID)  não encontrada");
+            throw new common_1.NotFoundException(`Moeda com ID ${id} não encontrada`);
         }
         return moeda;
     }
@@ -68,24 +68,72 @@ let MoedasService = class MoedasService {
         await this.moedaRepo.delete(id);
     }
     async converter(from, to, amount) {
-        const moedaFrom = await this.moedaRepo.findOne({
-            where: { nome: from },
-            relations: { cotacoes: true }
+        if (!from || !to || !amount) {
+            throw new common_1.BadRequestException('Voce precisa enviar from, to e amount no corpo (JSON) da requisicao');
+        }
+        const agora = new Date();
+        const horaAtualStr = agora.toLocaleTimeString('pt-BR', {
+            timeZone: 'America/Recife',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
         });
-        const moedaTo = await this.moedaRepo.findOne({
-            where: { nome: to },
-            relations: { cotacoes: true }
-        });
-        if (!moedaFrom || !moedaTo)
-            throw new common_1.NotFoundException('Moeda não encontrada');
-        if (!moedaFrom.cotacoes.length || !moedaTo.cotacoes.length)
-            throw new common_1.BadRequestException('Moeda sem cotação registrada');
-        const taxaFrom = moedaFrom.cotacoes
-            .sort((a, b) => b.dataModificacao.getTime() - a.dataModificacao.getTime())[0].valor;
-        const taxaTo = moedaTo.cotacoes
-            .sort((a, b) => b.dataModificacao.getTime() - a.dataModificacao.getTime())[0].valor;
-        const resultado = amount * (taxaTo / taxaFrom);
-        return { from, to, amount, resultado, taxaFrom, taxaTo };
+        let taxaFrom = this.getTaxaMoedaFixa(from, horaAtualStr);
+        let taxaTo = this.getTaxaMoedaFixa(to, horaAtualStr);
+        if (taxaFrom === null) {
+            const moedaFrom = await this.moedaRepo.findOne({
+                where: { nome: from },
+                relations: { cotacoes: true }
+            });
+            if (!moedaFrom)
+                throw new common_1.NotFoundException(`Moeda ${from} nao encontrada no banco`);
+            if (!moedaFrom.cotacoes.length)
+                throw new common_1.BadRequestException(`Moeda ${from} sem cotacao`);
+            taxaFrom = moedaFrom.cotacoes
+                .sort((a, b) => b.dataModificacao.getTime() - a.dataModificacao.getTime())[0].valor;
+        }
+        if (taxaTo === null) {
+            const moedaTo = await this.moedaRepo.findOne({
+                where: { nome: to },
+                relations: { cotacoes: true }
+            });
+            if (!moedaTo)
+                throw new common_1.NotFoundException(`Moeda ${to} nao encontrada no banco`);
+            if (!moedaTo.cotacoes.length)
+                throw new common_1.BadRequestException(`Moeda ${to} sem cotacao`);
+            taxaTo = moedaTo.cotacoes
+                .sort((a, b) => b.dataModificacao.getTime() - a.dataModificacao.getTime())[0].valor;
+        }
+        const resultado = amount * (taxaFrom / taxaTo);
+        return {
+            from,
+            to,
+            amount,
+            resultado,
+            taxaFrom,
+            taxaTo,
+            horarioReferencia: horaAtualStr
+        };
+    }
+    getTaxaMoedaFixa(nomeDaMoeda, horarioAtual) {
+        if (nomeDaMoeda == 'BRL')
+            return 1.0;
+        const hAtual = horarioAtual.substring(0, 5);
+        if (nomeDaMoeda === 'USD') {
+            if (hAtual >= '07:00' && hAtual < '12:00')
+                return 5.00;
+            if (hAtual >= '12:00' && hAtual < '17:00')
+                return 5.20;
+            return 7.00;
+        }
+        if (nomeDaMoeda === 'EUR') {
+            if (hAtual >= '07:00' && hAtual < '12:00')
+                return 5.40;
+            if (hAtual >= '12:00' && hAtual < '17:00')
+                return 7.60;
+            return 8.00;
+        }
+        return null;
     }
 };
 exports.MoedasService = MoedasService;
