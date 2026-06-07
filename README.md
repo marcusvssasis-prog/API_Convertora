@@ -23,7 +23,7 @@ Atualizar uma conversão existente [X]; \
 --> Req: Updt on DB.;\
 Converter valores utilizando taxas de câmbio atualizadas ou simuladas [X]; \
 --> Req: (Teorico?) Criar valores simulados onde 'moeda' recebe de uma var (vinda de db?) que declara valor pre-conversão; \
-Persistir históricod de conversões []; \
+Persistir históricod de conversões [x]; \
 --> Req: Fazer que cada POST também anote seu resultado na DB. \
 Tratamento de exceções [x]; \
 --> Req: idk, native? \
@@ -96,4 +96,33 @@ curl -X POST localhost:3000/moedas/converter \
   -d '{"from": "moeda", "to": "moeda", "amount": 1}' | jq
 ```
 
+# Cotacao com flutuacao de valor
 
+```
+MOEDAS DISPONIVEIS:
+
+REAL -> BRL 
+Tem valor fixo de 1
+
+DOLAR -> USD
+07:00 ate 12:00 -> 1 dol vale R$5.00
+12:00 ate 17:00 -> 1 dol vale R$5.20
+17:00 ate 6:59 -> 1 dol vale R$7.00
+
+EURO -> EUR
+07:00 ate 12:00 -> 1 euro vale R$5.40
+12:00 ate 17:00 -> 1 euro vale R$7.60
+17:00 ate 6:59 -> 1 euro vale R$8.00
+
+PARA EXECUTAR O COMANDO ESCREVA NO TERMINAL:
+
+curl -X POST "http://localhost:3000/moedas/converter" \
+-H "Content-Type: application/json" \
+-d '{
+  "from": "BRL",
+  "to": "USD",
+  "amount": 10
+}'
+
+OBS:Infelizmente o resultado so exibido no terminal, por se tratar de um post
+```
