@@ -1,4 +1,4 @@
-import { NotFoundException, Injectable, BadRequestException } from '@nestjs/common';
+import { ConflictException, NotFoundException, Injectable, BadRequestException } from '@nestjs/common';
 import { CreateMoedaDto } from './dto/create-moeda.dto';
 import { UpdateMoedaDto } from './dto/update-moeda.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -6,7 +6,7 @@ import { Repository } from "typeorm";
 import { Moeda } from './entities/moeda.entity';
 import { CotacaoMoeda } from './entities/cotacao-moeda.entity';
 import { UpdateCotacaoDto } from './dto/update-cotacao.dto';
-
+import { QueryFailedError } from 'typeorm';
 
 @Injectable()
 export class MoedasService {
@@ -16,13 +16,27 @@ export class MoedasService {
     @InjectRepository(CotacaoMoeda)
     private cotacaoRepo: Repository<CotacaoMoeda>
   ) { }
+// POST /moedas — cria nova moeda
+ async create(dto: CreateMoedaDto): Promise<Moeda> {
+  try {
+    const existente = await this.moedaRepo.findOne({
+      where: { nome: dto.nome },
+    });
 
-  // POST /moedas — registra a moeda
-  async create(dto: CreateMoedaDto): Promise<Moeda> {
+    if (existente) {
+      throw new ConflictException(`Moeda já existe com id ${existente.id}`);
+    }
+
     const moeda = this.moedaRepo.create({ nome: dto.nome });
     return await this.moedaRepo.save(moeda);
-  }
 
+  } catch (error) {
+    if (error instanceof QueryFailedError) {
+      throw new ConflictException('Moeda já existe');
+    }
+    throw error;
+  }
+}
   // POST /moedas/:id/cotacao — adiciona valor à moeda
   async addCotacao(id: number, valor: number): Promise<CotacaoMoeda> {
     const moeda = await this.moedaRepo.findOneBy({ id });
